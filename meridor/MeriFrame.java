@@ -1,4 +1,6 @@
 package meridor;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -22,12 +24,13 @@ public class MeriFrame extends JFrame implements ActionListener {
 		menu.add(mitem);
 		
 		mbar.add(menu);
-		
-		add (mbar);
+
+		setLayout(new FlowLayout());
 		add(mpanel);
 		setJMenuBar(mbar);
 		setVisible(true);
-		setSize(800,800);
+		pack();
+		//setSize(800,800);
 	}
 
 	public void actionPerformed(ActionEvent e) {

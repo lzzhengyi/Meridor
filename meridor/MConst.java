@@ -26,4 +26,10 @@ public class MConst {
 			y=yy;
 		}
 	}
+	public static int[] getSpeciesIDList(){
+		return new int[]{MOEHOG,SKEITH,TECHO,SCORCH,GRUNDO};
+	}
+	public static int[] getFoeIDList(){
+		return new int[]{D_MOE,D_SKE,D_TEC,D_SCO,D_GRU,D_BUZ,D_GRA};
+	}
 }

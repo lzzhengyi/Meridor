@@ -6,6 +6,7 @@ import static meridor.MConst.*;
 public class MeriPet {
 	
 	final static int []STATCAPS={18,18,14};
+	final static int []STATCAPS2={21,19,14};
 	final static String [] RANKS={
 			"Villager",
 			"Defender",
@@ -20,8 +21,15 @@ public class MeriPet {
 			new Species (SKEITH,"Skeith",1,15,15,9),
 			new Species (TECHO,"Techo",2,15,8,9),
 			new Species (SCORCH,"Scorchio",2,15,10,9),
-			new Species (GRUNDO,"Grundo",2,15,10,9)
+			new Species (GRUNDO,"Grundo",2,15,10,9),
 			
+			new Species (D_MOE,"DMoehog",4,15,8,9),
+			new Species (D_SKE,"DSkeith",1,15,15,9),
+			new Species (D_TEC,"DTecho",2,15,8,9),
+			new Species (D_SCO,"DScorchio",2,15,10,9),
+			new Species (D_GRU,"DGrundo",2,15,10,9),
+			new Species (D_BUZ,"DBuzz",2,15,10,9),
+			new Species (D_GRA,"DGrarrl",2,15,10,9)
 	};
 	/*
 	 * The class that contains the features of player and enemy neopets
@@ -95,6 +103,17 @@ public class MeriPet {
 		return location;
 	}
 	/**
+	 * Set the xy coordinates on the map of the meripet
+	 * no guarantees the tile is not shared with something else
+	 */
+	public void setLocation(int x,int y){
+		if (location==null){
+			location=new int []{x,y};
+		}
+		location[0]=x;
+		location[1]=y;
+	}
+	/**
 	 * Returns the amount of additional attack gained due to raw attack stat
 	 */
 	public static int getASbonus (int a){
@@ -117,13 +136,55 @@ public class MeriPet {
 		return b;
 	}
 	/**
+	 * Print the name of the pet's species
+	 */
+	public String getSpeciesName(){
+		return species.name;
+	}
+	/**
+	 * Print the name and rank separated by return
+	 */
+	public String getNameNRank(){
+		return name+"/"+RANKS[rank];
+	}
+	/**
+	 * Print the currhp and hp separated by slash
+	 */
+	public String getDmgNHealth(){
+		return (getCurrHealth()+"/"+stats[HP]);
+	}
+	public int getCurrHealth(){
+		return stats[HP]-dmg;
+	}
+	//needs to be updated for equipped weapons
+	public String getAttackString(){
+		return stats[ATK]+"+"+getASbonus(stats[ATK]);
+	}
+	//needs to be updated for equipped weapons
+	public String getDefenseString(){
+		return (stats[DEF]+"");
+	}
+	public String getSavesString(){
+		return saves+"";
+	}
+	//not yet working, might want to use a graphic
+	public String getWeaponName(){
+		return "";
+	}
+	//not yet working, might want to use a graphic
+	public String getArmorName(){
+		return "";
+	}
+	/**
 	 *An attempt at the damage formula; might want to export this method 
 	 */
-	public static void attack (MeriPet a, MeriPet d){
+	public static String attack (MeriPet a, MeriPet d){
 		int roll=rand.nextInt(21)+1;
 		int damage = a.stats[ATK]+getASbonus(a.stats[ATK])+roll;
 		int net = damage-d.stats[DEF];
-		System.out.println(a.name+" attacked for "+damage+", dealing "+net+"total!");
+		String battlelog=a.name+" attacked for "+damage+", dealing "+net+"total!";
+		System.out.println(battlelog);
+		return battlelog;
 	}
 	public String printStats(){
 		return name
@@ -166,6 +227,9 @@ public class MeriPet {
 	public void injure (int i){
 		dmg+=i;
 	}
+	/**
+	 * Restores health to meripet, cannot restore above max
+	 */
 	public void heal (int i){
 		dmg=Math.max(dmg-i, 0);
 	}
@@ -182,8 +246,19 @@ public class MeriPet {
 		moves=species.moves+0;
 		tele=1;
 	}
+	/**
+	 * The returned ID should be the one referenced in MConst
+	 */
 	public int getSpeciesID(){
 		return species.spid;
+	}
+	/**
+	 * Use this to set stats for enemy pets
+	 */
+	public void setStats(int[]nstats){
+		if (nstats.length==3){
+			stats=nstats;
+		}
 	}
 	private class Species {
 		/*
