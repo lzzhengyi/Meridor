@@ -34,20 +34,6 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener{
 		random=new Random();
 		parent=p;
 
-//		tilemap=new MeriTile[MAPDIM][MAPDIM];
-//		int xoff=0;
-//		int yoff=0;
-//		for (int i=0;i<MAPDIM;i++){
-//			for (int j=0;j<MAPDIM;j++){
-//				tilemap[i][j]=new MeriTile(i+xoff,j+yoff);
-//				if (random.nextBoolean()){
-//					tilemap[i][j].setTerrain(random.nextInt(7));
-//				}
-//				yoff+=TILEDIM;
-//			}
-//			yoff=0;
-//			xoff+=TILEDIM;
-//		}
 		genTerrainMap();
 		
 		addMouseListener(this);
@@ -261,6 +247,19 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener{
 			//try to move into a blank tile if tile is valid
 			if (tilemap[xc][yc].terrain==BLANK){
 				parent.selected.setLocation(xc, yc);
+				parent.update();
+				parent.selected=null;
+			} else if (isFoePetTerrain(tilemap[xc][yc].terrain)){
+				//try to attack a foe
+				for (int i=0;i<parent.foe.size();i++){
+					if (Arrays.equals(parent.foe.get(i).getLocation(),new int[]{xc,yc})){
+						parent.updateBattleLog(MeriPet.attack(parent.selected, parent.foe.get(i)));
+						//the above method needs to print to a textlog
+						parent.selected=null;
+						parent.update();
+						break;
+					}
+				}
 			}
 		}
 		updatePetLocations(parent.getPetLocations());

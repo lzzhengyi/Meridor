@@ -32,4 +32,7 @@ public class MConst {
 	public static int[] getFoeIDList(){
 		return new int[]{D_MOE,D_SKE,D_TEC,D_SCO,D_GRU,D_BUZ,D_GRA};
 	}
+	public static boolean isFoePetTerrain(int tileID){
+		return tileID>=D_MOE && tileID<=D_GRA;
+	}
 }

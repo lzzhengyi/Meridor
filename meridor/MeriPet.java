@@ -113,6 +113,13 @@ public class MeriPet {
 		location[0]=x;
 		location[1]=y;
 	}
+	public void setLocation(int[] coords){
+		if (location==null){
+			location=new int []{coords[0],coords[1]};
+		}
+		location[0]=coords[0];
+		location[1]=coords[1];
+	}
 	/**
 	 * Returns the amount of additional attack gained due to raw attack stat
 	 */
@@ -146,6 +153,9 @@ public class MeriPet {
 	 */
 	public String getNameNRank(){
 		return name+"/"+RANKS[rank];
+	}
+	public String getRank(){
+		return RANKS[rank];
 	}
 	/**
 	 * Print the currhp and hp separated by slash
@@ -183,7 +193,8 @@ public class MeriPet {
 		int damage = a.stats[ATK]+getASbonus(a.stats[ATK])+roll;
 		int net = damage-d.stats[DEF];
 		String battlelog=a.name+" attacked for "+damage+", dealing "+net+"total!";
-		System.out.println(battlelog);
+		System.out.println(battlelog); //placeholder?
+		d.injure(net);
 		return battlelog;
 	}
 	public String printStats(){
@@ -225,7 +236,8 @@ public class MeriPet {
 	 * Use to deal damage to the npet
 	 */
 	public void injure (int i){
-		dmg+=i;
+		if (i>0)
+			dmg+=i;
 	}
 	/**
 	 * Restores health to meripet, cannot restore above max
