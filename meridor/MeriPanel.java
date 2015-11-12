@@ -20,6 +20,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 
 	final static int MAX_MOVES=5;
 	final static int MAX_LOGTEXT=5;
+	final static int MAX_VILLAGES=6;
 	final static int MAPDIM=10; //10 by 10 squares
 	final static int IMGDIM=30; //30 by 30 pixels
 	final static int IMGMARGIN=5; //5 pixels to display status
@@ -29,6 +30,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 	public ArrayList<MeriPet> ally,foe;
 	//public boolean playerturn; //what is this even for??? autoresolve!!!
 	public int movesLeft;
+	public int villagesLeft;
 	public MeriPet selected;
 	
 	ArrayList<String> battlelogtext=new ArrayList<String>();
@@ -44,6 +46,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 	public MeriPanel (){
 		random=new Random();
 		movesLeft=MAX_MOVES;
+		villagesLeft=MAX_VILLAGES;
 		selected=null;
 		
 		ally=new ArrayList<MeriPet>();
@@ -143,6 +146,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 			um.revalidate();
 			um.repaint();
 			
+			im.updateMovesLeft();
 			im.revalidate();
 			im.repaint();
 		}
@@ -186,48 +190,168 @@ public class MeriPanel extends JPanel implements MouseListener{
 		repaint();
 	}
 	/**
+	 * Set the selected unit for player movement, and update the display
+	 */
+	public void setSelected (MeriPet m){
+		selected=m;
+		im.updateDeselect();
+	}
+	/**
+	 * Implementation to do whatever necessary to destroy a village
+	 * May change later
+	 */
+	public void razeVillage(){
+		villagesLeft--;
+		im.updateVillagesLeft();
+		System.out.println("village razed!");
+	}
+	/**
+	 * Resets the movement for the allied units at beginning of turn
+	 */
+	public void refreshAllyMove(){
+		movesLeft=MAX_MOVES;
+		im.updateMovesLeft();
+		for (int i=0;i<ally.size();i++){
+			ally.get(i).refreshMove();
+		}
+	}
+	/**
+	 * Resets all attrited stats for allied units between fights
+	 */
+	public void refreshAllyAll(){
+		for (int i=0;i<ally.size();i++){
+			ally.get(i).refreshMove();
+			ally.get(i).refreshHP();
+		}
+	}
+	/**
+	 * Process 1 move per foe, and then give turn back to the player
+	 * Not sure if this is final
+	 * Priority is:
+	 * 1st: player units must be attacked
+	 * 2nd: villages that can be destroyed
+	 * 3rd: move down/to nearest village
+	 */
+	public void processFoeTurn(){
+		for (int i=0;i<foe.size();i++){
+			MeriPet chosen=foe.get(i);
+			
+			//highest priority: destroy village
+			//this implementation is redundant. I duplicate the search of adj tiles
+			ArrayList<int[]> nearvillages=bm.findAdjVillage(chosen.getLocation()[0], chosen.getLocation()[1]);
+			if (!nearvillages.isEmpty()){
+				int[]vloc=nearvillages.get(0);
+				//bm.razeVillage(vloc[0], vloc[1]); //not needed
+				bm.movePet(chosen, vloc);
+				razeVillage();
+			} else {
+				ArrayList<MeriPet> targets=bm.findNextFoeTarget(chosen.getLocation()[0], chosen.getLocation()[1]);
+				ArrayList<MeriPet> horitargets=bm.findHoriFoeTarget(chosen.getLocation()[0], chosen.getLocation()[1]);
+				//second priority action: kill npets 
+				if (!targets.isEmpty()){
+					MeriPet target=targets.get(0);
+					updateBattleLog(MeriPet.attack(chosen, target));
+				} else if (!horitargets.isEmpty()) { //move towards nearby pets
+					bm.movePet(chosen, bm.findOneTilePath(chosen.getLocation(), horitargets.get(0).getLocation()).get(0));
+					//remember onetilepath returns a list of potential paths so I take the first one
+				} else {
+					//third highest priority:
+					//if there is a village in the 3 rows centered on foe
+					//move down, prioritizing rows with villages in them
+					int seekvillage=bm.checkVillageInColumn(chosen.getLocation());
+					if (seekvillage>0){
+						int [] idealmoves=null;
+						if (seekvillage==1){
+							idealmoves=new int[]{chosen.getLocation()[0]-1,chosen.getLocation()[1]+2};
+						} else if (seekvillage==2){
+							idealmoves=new int[]{chosen.getLocation()[0],chosen.getLocation()[1]+2};
+						} else if (seekvillage==3){
+							idealmoves=new int[]{chosen.getLocation()[0],chosen.getLocation()[1]+2};
+
+						} else {
+							idealmoves=new int[]{};
+							System.out.println("village search error");
+						}
+						if (idealmoves.length>0){
+//							System.out.println(chosen.getLocation()[0]+","+chosen.getLocation()[1]+" d:"+idealmoves[0]+","+idealmoves[1]);
+							ArrayList<int[]>path=bm.findOneTilePath(chosen.getLocation(), idealmoves);
+							if (path.size()>0){
+								bm.movePet(chosen, path.get(0));
+//								System.out.println(chosen.getLocation()[0]+","+chosen.getLocation()[1]+" d:"+idealmoves[0]+","+idealmoves[1]);								
+							}
+						} else {
+							//naive movedown
+							ArrayList<MeriTile>below=bm.getAdjBelow(chosen.getLocation()[0], chosen.getLocation()[1]);
+							for (int j=0;j<below.size();j++){
+								if (below.get(i).checkPassable()){
+									bm.movePet(chosen, new int[]{below.get(i).getGridx(),below.get(i).getGridy()});
+									break;
+								}
+							}
+						}
+					} else {
+						System.out.println("failed"+seekvillage+"/"+chosen.getLocation()[0]+","+chosen.getLocation()[1]);
+						//final priority: greedy move to column with nearest village?
+					}
+				}
+			}
+		}
+		System.out.println("terminated");
+	}
+	/**
+	 * call this after a move is registered in the battlemap
+	 * decrements the movesleft (unless special move is made)
+	 * decrements selected's moves (unless special move is made)
+	 */
+	public void resolvePlayerMove (){
+		selected.moveOnce();//CHECK FOR SPECIAL CASES
+		setSelected(null);
+		reduceMoves(-1);
+		update();
+	}
+	/**
 	 * Duplicate of a method in battlemap: returns ordered list of tiles
 	 * for foe AI to check
 	 * this method may be deprecate in the future
 	 */
-	public ArrayList <MeriTile> getAdj (int x, int y){
-		ArrayList <MeriTile> results=new ArrayList<MeriTile>();
-		//top
-		if (y>=0)
-			results.add(tilemap[x][y-1]);
-		//bottom
-		if (y<MAPDIM-1)
-			results.add(tilemap[x][y+1]);
-		//top left and below
-		ArrayList<MeriTile>left=new ArrayList<MeriTile>();
-		ArrayList<MeriTile>right=new ArrayList<MeriTile>();
-		if (x>=0){
-			if (y>=0)
-				left.add(tilemap[x-1][y-1]);
-			left.add(tilemap[x-1][y]);
-			if (y<MAPDIM-1)
-				left.add(tilemap[x-1][y+1]);
-		}
-		if (x<MAPDIM-1){
-			if (y>=0)
-				right.add(tilemap[x+1][y-1]);
-			right.add(tilemap[x+1][y]);
-			if (y<MAPDIM-1)
-				right.add(tilemap[x+1][y+1]);
-		}
-		if (random.nextDouble()<0.7){
-			//add left first
-			results.addAll(left);
-			results.addAll(right);
-		} else {
-			//add right first
-			results.addAll(right);
-			results.addAll(left);
-		}
-		return results;
-	}
+//	public ArrayList <MeriTile> getAdj (int x, int y){
+//		ArrayList <MeriTile> results=new ArrayList<MeriTile>();
+//		//top
+//		if (y>=0)
+//			results.add(tilemap[x][y-1]);
+//		//bottom
+//		if (y<MAPDIM-1)
+//			results.add(tilemap[x][y+1]);
+//		//top left and below
+//		ArrayList<MeriTile>left=new ArrayList<MeriTile>();
+//		ArrayList<MeriTile>right=new ArrayList<MeriTile>();
+//		if (x>=0){
+//			if (y>=0)
+//				left.add(tilemap[x-1][y-1]);
+//			left.add(tilemap[x-1][y]);
+//			if (y<MAPDIM-1)
+//				left.add(tilemap[x-1][y+1]);
+//		}
+//		if (x<MAPDIM-1){
+//			if (y>=0)
+//				right.add(tilemap[x+1][y-1]);
+//			right.add(tilemap[x+1][y]);
+//			if (y<MAPDIM-1)
+//				right.add(tilemap[x+1][y+1]);
+//		}
+//		if (random.nextDouble()<0.7){
+//			//add left first
+//			results.addAll(left);
+//			results.addAll(right);
+//		} else {
+//			//add right first
+//			results.addAll(right);
+//			results.addAll(left);
+//		}
+//		return results;
+//	}
 	/**
-	 * When altering moves left, makes sure illegal values are not saved
+	 * When altering movesLeft, makes sure illegal values are not saved
 	 */
 	public void reduceMoves(int change){
 		movesLeft+=change;
@@ -549,6 +673,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 						}
 						ally=ally2;
 					}
+					toggleActive();
 				}
 			}
 			
@@ -586,8 +711,8 @@ public class MeriPanel extends JPanel implements MouseListener{
 	 */
 	private class InfoDisplay extends JPanel implements ActionListener{
 		
-		JLabel movesleftlabel;
-		JButton endturnbutton;
+		JLabel movesleftlabel, villagesleftlabel;
+		JButton endturnbutton, deselectbutton;
 		
 		/**
 		 *I want to dynamically display the items present on the map
@@ -600,25 +725,55 @@ public class MeriPanel extends JPanel implements MouseListener{
 			JLabel maxmoveslabel=new JLabel("Maximum Moves Total/Turn:"+MAX_MOVES);
 			JLabel petmaxlabel=new JLabel("Maximum Moves Total/Pet:");
 			movesleftlabel=new JLabel("Moves Left:"+movesLeft);
+			villagesleftlabel=new JLabel("Villages Left:"+villagesLeft);
 			endturnbutton=new JButton("End Turn");
+			deselectbutton=new JButton("Unselect:");
+			
 			endturnbutton.addActionListener(this);
+			deselectbutton.addActionListener(this);
 			
 			add(iteminfolabel);
 			add(maxmoveslabel);
 			add(petmaxlabel);
 			add(movesleftlabel);
+			add(villagesleftlabel);
 			add(endturnbutton);
+			add(deselectbutton);
 		}
-
+		/**
+		 * Call this after each player move (in battlemap, most likely)
+		 */
+		public void updateMovesLeft(){
+			movesleftlabel.setText("Moves Left:"+movesLeft);
+		}
+		/**
+		 * Call this after each player move (in battlemap, most likely)
+		 */
+		public void updateVillagesLeft(){
+			villagesleftlabel.setText("Villages Left:"+villagesLeft);
+		}
+		public void updateDeselect(){
+			if (selected==null){
+				deselectbutton.setText("Unselect:");
+			} else {
+				deselectbutton.setText("Unselect:"+selected.name);
+			}
+		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if (e.getSource()==endturnbutton){
 				int choice=JOptionPane.showConfirmDialog(null, "Are you sure you want to end your turn?", "", JOptionPane.YES_NO_OPTION);
 				if (choice==JOptionPane.YES_OPTION){
-					//end turn here
+					processFoeTurn();
+					refreshAllyMove();
+					updateVillagesLeft();
+					bm.revalidate();
+					bm.repaint();
 				}
 			}
-			
+			if (e.getSource()==deselectbutton){
+				setSelected(null);
+			}
 		}
 	}
 

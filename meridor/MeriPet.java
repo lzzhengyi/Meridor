@@ -186,7 +186,7 @@ public class MeriPet {
 		return "";
 	}
 	/**
-	 *An attempt at the damage formula; might want to export this method 
+	 *An attempt at the damage formula; might want to export this method to const
 	 */
 	public static String attack (MeriPet a, MeriPet d){
 		int roll=rand.nextInt(21)+1;

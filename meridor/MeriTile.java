@@ -72,6 +72,15 @@ public class MeriTile {
 	public void addItem (){
 		
 	}
+	public int getGridx(){
+		return x/TILESIZE;
+	}
+	public int getGridy(){
+		return y/TILESIZE;
+	}
+	public boolean checkPassable(){
+		return terrain==BLANK || terrain==CRATER;
+	}
 	//change to village, mountain, or crater
 	//I guess the equip tracker will pass locations
 	//and id of items, and same for pets
@@ -81,6 +90,11 @@ public class MeriTile {
 		}else {
 			terrain=BLANK;
 		}
+	}
+	public void drawMoveDepleted(Graphics g){
+		System.out.println("depleted found");
+		g.setColor(Color.red);
+		g.fillRect(x, y, TILESIZE, TILESIZE);
 	}
 	public void draw(Graphics g){
 		

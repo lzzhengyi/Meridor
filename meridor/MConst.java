@@ -26,12 +26,27 @@ public class MConst {
 			y=yy;
 		}
 	}
+	/**
+	 * A list of ids of all allied pets
+	 */
 	public static int[] getSpeciesIDList(){
 		return new int[]{MOEHOG,SKEITH,TECHO,SCORCH,GRUNDO};
 	}
+	/**
+	 * A list of ids of all enemy pets
+	 */
 	public static int[] getFoeIDList(){
 		return new int[]{D_MOE,D_SKE,D_TEC,D_SCO,D_GRU,D_BUZ,D_GRA};
 	}
+	/**
+	 * Check if the terrain type represents an allied pet
+	 */
+	public static boolean isAllyPetTerrain(int tileID){
+		return tileID>=MOEHOG && tileID<=GRUNDO;
+	}
+	/**
+	 * Check if the terrain type represents an enemy pet
+	 */
 	public static boolean isFoePetTerrain(int tileID){
 		return tileID>=D_MOE && tileID<=D_GRA;
 	}
