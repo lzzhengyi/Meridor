@@ -4,9 +4,9 @@ import static meridor.MConst.*;
 
 
 public class MeriPet {
-	
 	final static int []STATCAPS={18,18,14};
 	final static int []STATCAPS2={21,19,14};
+	final static int[] CAMPAIGNS[]={STATCAPS,STATCAPS2};
 	final static String [] RANKS={
 			"Villager",
 			"Defender",
@@ -15,7 +15,7 @@ public class MeriPet {
 			"Captain",
 			"Guardian"
 	};
-	
+	final static int[]RANKREQS={3,9,32,64,96}; //the saves needed to get to each rank (listed above)
 	final Species [] SPEC ={
 			new Species (MOEHOG,"Moehog",4,15,8,9),
 			new Species (SKEITH,"Skeith",1,15,15,9),
@@ -49,13 +49,14 @@ public class MeriPet {
 	final Species species; //contains racial information for the pet
 	int[] stats={10,5,5}; //contains current base stats
 	int dmg; //current damage taken by the pet
-	int rank; //the current level of the npet, max is 5
+//	int rank; //the current level of the npet, max is 5
 	int saves; //the stat for experience
 	int weapon; //the id of the item equipped
 	int armor; //id of the item equipped
 	int moves; //current amount of moves; base stored in species
 	int tele; //amount of teleports; this is 1 per turn
 	private int[]location;
+	boolean promoted; //whether the pet has been promoted in the current set of battles CLEAR AFTER EACH SET
 	
 	/**
 	 * Minimum constructor for a generic npet includes:
@@ -68,12 +69,13 @@ public class MeriPet {
 		name=n;
 		species=SPEC[sid];
 		saves=0;
-		rank=0;
 		weapon=-1;
 		armor=-1;
 		dmg=0;
 		moves=0;
 		tele=0;
+		
+		promoted=false;
 
 		//for meridell defenders
 		if (sc==VILLAGER){
@@ -92,10 +94,66 @@ public class MeriPet {
 			}
 		}
 	}
-	//lazy initialization pattern
+	/**
+	 * This constructor returns a new meripet that duplicates the original but is of a different species
+	 */
+	public MeriPet (MeriPet other, int sid){
+		species=SPEC[sid];
+		name=other.name;
+
+		saves=0;
+		weapon=-1;
+		armor=-1;
+		dmg=0;
+		moves=0;
+		tele=0;
+		
+		setLocation(other.getLocation());
+		promoted=false;
+		
+		stats=other.stats;
+	}
+	/**
+	 * The passed int is the campaignID; reference it for limits on stats if rank up
+	 * Only one promotion per mission; ranking up tells a pet that it has been promoted,
+	 * which needs to be reset
+	 * Increases saves by 1 (rank is dynamically calc'd based on saves)
+	 */
+	public void gainSave(int campaign){
+		if (!promoted){
+			saves++;
+			for (int i=0;i<RANKREQS.length;i++){
+				if (saves==RANKREQS[i]){
+					gainStats(campaign);
+					promoted=true;
+				}
+			}
+		}
+	}
+	/**
+	 * I pass the campaign ID so that the game knows whether to use the high or
+	 * low stat caps. This method raises all stats by 1 unless the pet has reached
+	 * the stat cap.
+	 */
+	public void gainStats(int campaign){
+		int [] caps=STATCAPS2;
+		if (campaign==1){
+			caps=STATCAPS;
+		}
+		for (int i=0;i<stats.length;i++){
+			if (stats[i]<caps[i]){
+				stats[i]++;
+			}
+		}
+	}
+	//***lazy initialization pattern
 	//I'm not sure about the implementation of location
 	//this implementation is intended to require the gamestate to
 	//loop through list of player/foe pets to see which coord lines up with a click
+	/**
+	 * Lazy initialization
+	 * returns an "array-tuple" 2 units long, corresponding to x and y value
+	 */
 	public int[] getLocation(){
 		if (location==null){
 			location=new int []{0,0};
@@ -113,6 +171,10 @@ public class MeriPet {
 		location[0]=x;
 		location[1]=y;
 	}
+	/**
+	 * Lazy initialization
+	 * takes an "array-tuple" 2 units long, corresponding to x and y value
+	 */
 	public void setLocation(int[] coords){
 		if (location==null){
 			location=new int []{coords[0],coords[1]};
@@ -152,9 +214,25 @@ public class MeriPet {
 	 * Print the name and rank separated by return
 	 */
 	public String getNameNRank(){
-		return name+"/"+RANKS[rank];
+		return name+"/"+getRank();
 	}
 	public String getRank(){
+		int rank=0;
+		if (saves>=3){
+			rank++;
+			if (saves>=9){
+				rank++;
+				if (saves>=32){
+					rank++;
+					if (saves>=64){
+						rank++;
+						if (saves>=96){
+							rank++;
+						}
+					}
+				} 
+			}
+		}
 		return RANKS[rank];
 	}
 	/**
@@ -190,16 +268,34 @@ public class MeriPet {
 	 */
 	public static String attack (MeriPet a, MeriPet d){
 		int roll=rand.nextInt(21)+1;
-		int damage = a.stats[ATK]+getASbonus(a.stats[ATK])+roll;
-		int net = damage-d.stats[DEF];
-		String battlelog=a.name+" attacked for "+damage+", dealing "+net+"total!";
+		int damage = getASbonus(a.stats[ATK])+roll;
+		int net = Math.max(0, damage-d.stats[DEF]);
+		String battlelog=a.name+" attacked "+d.name+" for "+damage+
+				", dealing "+net+" total! (Rolled "+roll+")";
 		System.out.println(battlelog); //placeholder?
 		d.injure(net);
 		return battlelog;
 	}
+	/**
+	 * Use to turn a meripet to the opposite allegiance
+	 * Returns a completely different meripet with the same name and stats, clears equips
+	 * Returns null if conversion is invalid
+	 */
+	public MeriPet convert (){
+		if (isAllyPetTerrain(getSpeciesID())){
+			return new MeriPet(this,getFoeVersionOfAlly(getSpeciesID()));
+		} else {
+			int sid=getAllyVersionOfFoe(getSpeciesID());
+			if (sid>=0){
+				return new MeriPet(this,getAllyVersionOfFoe(getSpeciesID()));
+			} else {
+				return null;
+			}
+		}
+	}
 	public String printStats(){
 		return name
-				+ " the "+RANKS[rank]+" "+species.name
+				+ " the "+getRank()+" "+species.name
 				+ " HP:"+stats[HP]
 				+ " ATK:"+stats[ATK]+"+"+getASbonus(stats[ATK])
 				+ " DEF:"+stats[DEF];
@@ -225,6 +321,7 @@ public class MeriPet {
 	 */
 	public void moveOnce (){
 		moves=Math.max(moves-1, 0);
+//		System.out.println(name+" has "+moves+" moves left.");
 	}
 	/**
 	 * returns true if dmg>health

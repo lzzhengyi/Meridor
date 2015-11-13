@@ -27,38 +27,41 @@ public class MeriTile {
 	public MeriTile (int xx,int yy){
 		if (tileGraphicMap ==null){
 			tileGraphicMap=new HashMap<Integer,BufferedImage>();
-			try {
-				BufferedImage ttile1=ImageIO.read(new File("vlg.jpg"));
-				BufferedImage ttile2=ImageIO.read(new File("mtn.jpg"));
-				BufferedImage ttile3=ImageIO.read(new File("Smoking_Crater.jpg"));
-				BufferedImage ttile4=ImageIO.read(new File("Moeh00.jpg"));
-				BufferedImage ttile5=ImageIO.read(new File("Skei01.jpg"));
-				BufferedImage ttile6=ImageIO.read(new File("Tech02.jpg"));
-				BufferedImage ttile7=ImageIO.read(new File("Scor03.jpg"));
-				BufferedImage ttile8=ImageIO.read(new File("Grun04.jpg"));
-				BufferedImage ttile9=ImageIO.read(new File("Draco_Moehog00.jpg"));
-				BufferedImage ttile10=ImageIO.read(new File("Draco_Skeith00.jpg"));
-				BufferedImage ttile11=ImageIO.read(new File("Draco_Techo00.jpg"));
-				BufferedImage ttile12=ImageIO.read(new File("Draco_Scorchio00.jpg"));
-				BufferedImage ttile13=ImageIO.read(new File("Draco_Grundo00.jpg"));
-				BufferedImage ttile14=ImageIO.read(new File("Draco_Buzz00.jpg"));
-				BufferedImage ttile15=ImageIO.read(new File("Draco_Grarrl00.jpg"));
-				
-				tileGraphicMap.put(VILLAGE, ttile1);
-				tileGraphicMap.put(MOUNTAIN, ttile2);
-				tileGraphicMap.put(CRATER, ttile3);
-				tileGraphicMap.put(MOEHOG, ttile4);
-				tileGraphicMap.put(SKEITH, ttile5);
-				tileGraphicMap.put(TECHO, ttile6);
-				tileGraphicMap.put(SCORCH, ttile7);
-				tileGraphicMap.put(GRUNDO, ttile8);
-				tileGraphicMap.put(D_MOE, ttile9);
-				tileGraphicMap.put(D_SKE, ttile10);
-				tileGraphicMap.put(D_TEC, ttile11);
-				tileGraphicMap.put(D_SCO, ttile12);
-				tileGraphicMap.put(D_GRU, ttile13);
-				tileGraphicMap.put(D_BUZ, ttile14);
-				tileGraphicMap.put(D_GRA, ttile15);
+			try {				
+				//terrain
+				tileGraphicMap.put(VILLAGE, ImageIO.read(new File("vlg.jpg")));
+				tileGraphicMap.put(MOUNTAIN, ImageIO.read(new File("mtn.jpg")));
+				tileGraphicMap.put(CRATER, ImageIO.read(new File("Smoking_Crater.jpg")));
+				//ally
+				tileGraphicMap.put(MOEHOG, ImageIO.read(new File("Moeh00.jpg")));
+				tileGraphicMap.put(SKEITH, ImageIO.read(new File("Skei01.jpg")));
+				tileGraphicMap.put(TECHO, ImageIO.read(new File("Tech02.jpg")));
+				tileGraphicMap.put(SCORCH, ImageIO.read(new File("Scor03.jpg")));
+				tileGraphicMap.put(GRUNDO, ImageIO.read(new File("Grun04.jpg")));
+				//foe
+				tileGraphicMap.put(D_MOE, ImageIO.read(new File("Draco_Moehog00.jpg")));
+				tileGraphicMap.put(D_SKE, ImageIO.read(new File("Draco_Skeith00.jpg")));
+				tileGraphicMap.put(D_TEC, ImageIO.read(new File("Draco_Techo00.jpg")));
+				tileGraphicMap.put(D_SCO, ImageIO.read(new File("Draco_Scorchio00.jpg")));
+				tileGraphicMap.put(D_GRU, ImageIO.read(new File("Draco_Grundo00.jpg")));
+				tileGraphicMap.put(D_BUZ, ImageIO.read(new File("Draco_Buzz00.jpg")));
+				tileGraphicMap.put(D_GRA, ImageIO.read(new File("Draco_Grarrl00.jpg")));
+				//potions
+				tileGraphicMap.put(P_HEAL, ImageIO.read(new File("Health_Potion.jpg")));
+				tileGraphicMap.put(P_FORT, ImageIO.read(new File("Potion_of_Fortitude.jpg")));
+				tileGraphicMap.put(P_MEGA, ImageIO.read(new File("Mega_Potion.jpg")));
+				tileGraphicMap.put(P_WELL, ImageIO.read(new File("Potion_of_Well-Being.jpg")));
+				//treasure
+				tileGraphicMap.put(GOBLET, ImageIO.read(new File("Goblet.jpg")));
+				tileGraphicMap.put(GOLDIX, ImageIO.read(new File("Gold_Ixi.jpg")));
+				tileGraphicMap.put(URNABU, ImageIO.read(new File("Urn_of_Abundance.jpg")));
+				tileGraphicMap.put(ANCBOO, ImageIO.read(new File("Ancient_Book.jpg")));
+				tileGraphicMap.put(CROWN_, ImageIO.read(new File("Crown.jpg")));
+				tileGraphicMap.put(ROYPLA, ImageIO.read(new File("Royal_Plate.jpg")));
+				tileGraphicMap.put(ROYTAP, ImageIO.read(new File("Royal_Tapestry.jpg")));
+				tileGraphicMap.put(TRECHE, ImageIO.read(new File("Treasure_Chest.jpg")));
+				tileGraphicMap.put(VASPLE, ImageIO.read(new File("Vase_of_Plenty.jpg")));
+				tileGraphicMap.put(VICORB, ImageIO.read(new File("Orb.jpg")));
 				System.out.println(tileGraphicMap.size());
 			} catch (IOException e){
 				System.out.println("Import failure");
@@ -92,18 +95,25 @@ public class MeriTile {
 		}
 	}
 	public void drawMoveDepleted(Graphics g){
-		System.out.println("depleted found");
 		g.setColor(Color.red);
 		g.fillRect(x, y, TILESIZE, TILESIZE);
 	}
-	public void draw(Graphics g){
-		
-		g.setColor(Color.gray);
-		g.drawRect(x, y, TILESIZE, TILESIZE);
-		g.drawRect(x+3, y+3, TILESIZE-7, TILESIZE-7);
-		
+	public void draw(Graphics g){		
 		if (tileGraphicMap.containsKey(terrain)){
-			g.drawImage(tileGraphicMap.get(terrain), x+4, y+4, null);
+			if (isTreasure(terrain)){
+				g.drawImage(tileGraphicMap.get(terrain).getSubimage(5, 5, 38, 38), 
+						x, y, null);
+			} else{
+				g.drawImage(tileGraphicMap.get(terrain), x+4, y+4, null);
+			}
+
+		} else {
+			g.setColor(Color.white);
+			g.fillRect(x, y, TILESIZE, TILESIZE);
 		}
+		g.setColor(Color.gray);
+		if (!isTreasure(terrain))
+			g.drawRect(x+3, y+3, TILESIZE-7, TILESIZE-7);
+		g.drawRect(x, y, TILESIZE, TILESIZE);
 	}
 }

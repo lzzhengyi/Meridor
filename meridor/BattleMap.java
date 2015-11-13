@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.io.File;
@@ -14,30 +15,36 @@ import java.util.Arrays;
 import java.util.Random;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.EtchedBorder;
+
 import static meridor.MConst.*;
 
 //even though this class is called battlemap
 //I think I will use it as the gamestate
-public class BattleMap extends JPanel implements ActionListener,MouseListener{
+public class BattleMap extends JPanel implements ActionListener,MouseListener,MouseMotionListener{
 
 	final static int MAPDIM=10; //10 by 10 squares
 	final static int IMGDIM=30; //30 by 30 pixels
 	final static int IMGMARGIN=5; //5 pixels to display status
 	final static int TILEDIM=IMGDIM+IMGMARGIN+2; //total size of cells
 	//BufferedImage buzz;
+	private int [] mouseLocation={0,0};
 	public MeriTile [][] tilemap;
-	public Random random;
+	private Random random;
 	private MeriPanel parent;
 	
 	//level is needed to restrict spawned items and enemies
 	public BattleMap (int level, MeriPanel p){
+		setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+		
 		random=new Random();
 		parent=p;
 
 		genTerrainMap();
 		
 		addMouseListener(this);
-		setPreferredSize(new Dimension(getPaneSize()+5,getPaneSize()+5));
+		addMouseMotionListener(this);
+		setPreferredSize(new Dimension(getPaneSize()+10,getPaneSize()+10));
 	}
 	public void genTerrainMap(){
 		//mountains on the mid two and outer two, even rows only
@@ -113,6 +120,13 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener{
 			}
 		}
 	}
+	public void placeTreasure(int treasure){
+		tilemap[4][0].setTerrain(treasure);
+	}
+	public void placePotions(int potion){
+		tilemap[4][5].setTerrain(potion);
+		tilemap[6][5].setTerrain(potion);
+	}
 	/**
 	 * Update the locations of meripets from the meripanel
 	 */
@@ -167,16 +181,16 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener{
 		ArrayList<MeriTile>left=new ArrayList<MeriTile>();
 		ArrayList<MeriTile>right=new ArrayList<MeriTile>();
 		if (x>0){
+			left.add(tilemap[x-1][y]);
 			if (y>0)
 				left.add(tilemap[x-1][y-1]);
-			left.add(tilemap[x-1][y]);
 			if (y<MAPDIM-1)
 				left.add(tilemap[x-1][y+1]);
 		}
 		if (x<MAPDIM-1){
+			right.add(tilemap[x+1][y]);
 			if (y>0)
 				right.add(tilemap[x+1][y-1]);
-			right.add(tilemap[x+1][y]);
 			if (y<MAPDIM-1)
 				right.add(tilemap[x+1][y+1]);
 		}
@@ -193,31 +207,61 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener{
 	}
 	/**
 	 * returns 3 below only
+	 * emptylist means bottom row
 	 */
 	public ArrayList <MeriTile> getAdjBelow (int x, int y){
 		ArrayList <MeriTile> results=new ArrayList<MeriTile>();
-		//bottom
-		if (y<MAPDIM-1)
+		if (y<MAPDIM-1){
+			//bottom
 			results.add(tilemap[x][y+1]);
-		//top left and below
-		ArrayList<MeriTile>left=new ArrayList<MeriTile>();
-		ArrayList<MeriTile>right=new ArrayList<MeriTile>();
-		if (x>0){
-			if (y<MAPDIM-1)
+			//top left and below
+			ArrayList<MeriTile>left=new ArrayList<MeriTile>();
+			ArrayList<MeriTile>right=new ArrayList<MeriTile>();
+			if (x>0){
 				left.add(tilemap[x-1][y+1]);
-		}
-		if (x<MAPDIM-1){
-			if (y<MAPDIM-1)
+			}
+			if (x<MAPDIM-1){
 				right.add(tilemap[x+1][y+1]);
+			}
+			if (random.nextDouble()<0.7){
+				//add left first
+				results.addAll(left);
+				results.addAll(right);
+			} else {
+				//add right first
+				results.addAll(right);
+				results.addAll(left);
+			}
 		}
-		if (random.nextDouble()<0.7){
-			//add left first
-			results.addAll(left);
-			results.addAll(right);
-		} else {
-			//add right first
-			results.addAll(right);
-			results.addAll(left);
+		return results;
+	}
+	/**
+	 * returns 3 above only
+	 * empty list means top row
+	 */
+	public ArrayList <MeriTile> getAdjAbove (int x, int y){
+		ArrayList <MeriTile> results=new ArrayList<MeriTile>();
+		//bottom
+		if (y>0){
+			results.add(tilemap[x][y-1]);
+			//top left and below
+			ArrayList<MeriTile>left=new ArrayList<MeriTile>();
+			ArrayList<MeriTile>right=new ArrayList<MeriTile>();
+			if (x>0){
+				left.add(tilemap[x-1][y-1]);
+			}
+			if (x<MAPDIM-1){
+				right.add(tilemap[x+1][y-1]);
+			}
+			if (random.nextDouble()<0.7){
+				//add left first
+				results.addAll(left);
+				results.addAll(right);
+			} else {
+				//add right first
+				results.addAll(right);
+				results.addAll(left);
+			}
 		}
 		return results;
 	}
@@ -265,7 +309,7 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener{
 		}
 		for (int i=0;i<adjlist.size();i++){
 			for (int j=0;j<parent.ally.size();j++){
-				if (Arrays.equals(parent.ally.get(j).getLocation(),new int[]{adjlist.get(i).x,adjlist.get(i).y})){
+				if (Arrays.equals(parent.ally.get(j).getLocation(),new int[]{adjlist.get(i).getGridx(),adjlist.get(i).getGridy()})){
 					targets.add(parent.ally.get(j));
 					break;
 				}
@@ -293,11 +337,33 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener{
 		return destadj;
 	}
 	/**
+	 * The "NearestColumnMultiplier tells an invader whether to go left or right
+	 * to get to a column with a village in it
+	 * It is intended to be multiplied by 2 and passed to findOneTilePath
+	 * -1 goes left, 1 goes right
+	 * 
+	 * searches in both directions from the passed x ooordinate until it finds a village
+	 */
+	public int getNearestColumnMultiplier(int x){
+		int direction=0;
+		for (int i=1;i<MAPDIM;i++){
+			if (x+i<MAPDIM && checkVillageInColumn(x+i)){
+				direction=1;
+				break;
+			}
+			if (x-i>=0 && checkVillageInColumn(x-i)){
+				direction=-1;
+				break;				
+			}
+		}
+		return direction;
+	}
+	/**
 	 * checks current column and two adjacent for a village
 	 * return -1 if no village, 1 if left, 2 if mid, 3 if right
 	 * returns middle then left then right village if multiple in column
 	 */
-	public int checkVillageInColumn(int[]start){
+	public int checkVillageInAdjColumn(int[]start){
 		int found=-1;
 		for (int i=0;i<tilemap.length-start[1];i++){
 			if (tilemap[start[0]][start[1]+i].terrain==VILLAGE){
@@ -316,13 +382,31 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener{
 		return found;
 	}
 	/**
+	 * Based off the prior algorithm.
+	 * This is inefficiently designed because I wrote this second,
+	 * so the prior method does not incorporate its functionality - yet
+	 * Only checks tiles 6-8 in the current column for villages
+	 */
+	public boolean checkVillageInColumn(int column){
+		boolean found=false;
+		for (int i=0;i<3;i++){
+			if (tilemap[column][6+i].terrain==VILLAGE){
+				found=true;
+				break;
+			}
+		}
+		return found;
+	}
+	/**
 	 * return true if the passed MeriTile is adj to the reference coordinates
 	 */
 	public boolean checkAdj(MeriTile mt, int[]ref){
 		return getAdj(ref[0],ref[1]).contains(mt);
 	}
 	/**
-	 * return true if the passed coordinate is next to the selected meripet in parent
+	 * 
+	 * @param clicked: a tile to check
+	 * @return true if the passed coordinate is next to the selected meripet in parent
 	 */
 	public boolean checkSelectedAdj(int[]clicked){
 		boolean isadj=false;
@@ -333,6 +417,14 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener{
 			}
 		} 
 		return isadj;
+	}
+	/**
+	 * set the terrain of a specific tile in the tilemap
+	 * mainly used to turn tiles blank or to craters
+	 * @param location
+	 */
+	public void setTerrain(int[]location,int tileID){
+		tilemap[location[0]][location[1]].setTerrain(tileID);
 	}
 	public int getPaneSize(){
 		return MAPDIM*MeriTile.TILESIZE;
@@ -346,7 +438,8 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener{
 					//if the terrain is of an ally, find the ally, check if it
 					//has exhausted its moves, and then depict appropriately
 					for (int k=0;k<parent.ally.size();k++){
-						if (Arrays.equals(parent.foe.get(i).getLocation(),new int[]{i,j})){
+						if (Arrays.equals(parent.ally.get(k).getLocation(),new int[]{i,j}) &&
+								!parent.ally.get(k).hasMove()){
 							tilemap[i][j].drawMoveDepleted(g);
 							break;
 						}
@@ -389,11 +482,12 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener{
 		if (my<getPaneSize()){
 			yc=my/MeriTile.TILESIZE;
 		}
-		System.out.println(mx+" "+my+"/"+xc+" "+yc);
+//		System.out.println(mx+" "+my+"/"+xc+" "+yc);
 		//if no target selected, try to reference parent coordinates to find a pet
 		if (parent.selected==null){
 			for (int i=0;i<parent.ally.size();i++){
-				if (Arrays.equals(parent.ally.get(i).getLocation(),new int[]{xc,yc})){
+				if (Arrays.equals(parent.ally.get(i).getLocation(),new int[]{xc,yc}) 
+						&& parent.ally.get(i).hasMove()){
 					parent.setSelected(parent.ally.get(i));
 				}
 			}
@@ -407,12 +501,24 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener{
 				for (int i=0;i<parent.foe.size();i++){
 					if (Arrays.equals(parent.foe.get(i).getLocation(),new int[]{xc,yc})){
 						parent.updateBattleLog(MeriPet.attack(parent.selected, parent.foe.get(i)));
-						//the above method needs to print to a textlog
+						//if (selected is not a skeith with berserk axe)
 						parent.resolvePlayerMove();
 						break;
 					}
 				}
-			} else {
+			} else if (isPotion(tilemap[xc][yc].terrain)){
+				parent.selected.setLocation(xc, yc);
+				if (parent.selected.dmg>0){
+					parent.selected.heal(random.nextInt(15)+10);
+					parent.updateBattleLog(parent.selected+" drinks a potion. Its health is now "+
+							parent.selected.getCurrHealth()+" points!");
+				} else {
+					parent.updateBattleLog(parent.selected+" drinks a potion. But it was already at full health!");
+				}
+
+				parent.resolvePlayerMove();
+			} //additional cases go here 
+			else {
 				//if ally pet, resolve special abilities: healing/disenchantments
 				parent.setSelected(null);
 			}
@@ -423,5 +529,31 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener{
 	public void mouseReleased(MouseEvent arg0) {
 		// TODO Auto-generated method stub
 		
+	}
+	@Override
+	public void mouseDragged(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	public void mouseMoved(MouseEvent e) {
+		mouseLocation[0]=e.getX();
+		mouseLocation[1]=e.getY();
+		if (mouseLocation[0]<getPaneSize() && mouseLocation[1]<getPaneSize()){
+			int xc=mouseLocation[0]/MeriTile.TILESIZE;
+			int yc=mouseLocation[1]/MeriTile.TILESIZE;
+			boolean found=false;
+			for (int i=0;i<parent.getPetLocations().size();i++){
+				if (Arrays.equals(parent.getPetLocations().get(i).getLocation(),new int[]{xc,yc})){
+					setToolTipText(parent.getPetLocations().get(i).name);
+					found=true;
+					break;
+				}
+			}
+			if (!found){
+				setToolTipText(null);
+			}
+		} else {
+			setToolTipText(null);
+		}
 	}
 }
