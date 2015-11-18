@@ -12,15 +12,25 @@ public class MeriFrame extends JFrame implements ActionListener {
 	public MeriPanel mpanel;
 	JMenu menu;
 	JMenuBar mbar;
-	JMenuItem mitem;
+	JMenuItem mitem,save,load,newcampaign;
 	
 	public MeriFrame (){
+		MConst.loadImages();
+		MConst.initItems();
+		
+		this.setTitle("Invasion of Meridor Alpha");
 		mpanel=new MeriPanel();
 		mbar=new JMenuBar();
 		
 		menu=new JMenu("File");
+		newcampaign=new JMenuItem("New");
+		save=new JMenuItem("Save");
+		load=new JMenuItem("Load");
 		mitem=new JMenuItem("Toggle displays");
 		mitem.addActionListener(this);
+		menu.add(newcampaign);
+		menu.add(save);
+		menu.add(load);
 		menu.add(mitem);
 		
 		mbar.add(menu);

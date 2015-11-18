@@ -184,6 +184,7 @@ public class MeriPet {
 	}
 	/**
 	 * Returns the amount of additional attack gained due to raw attack stat
+	 * Tentatively adding the calculation for extra weapon attack here
 	 */
 	public static int getASbonus (int a){
 		int b=0;
@@ -246,18 +247,56 @@ public class MeriPet {
 	}
 	//needs to be updated for equipped weapons
 	public String getAttackString(){
-		return stats[ATK]+"+"+getASbonus(stats[ATK]);
+		return stats[ATK]+"+"+(getASbonus(stats[ATK])+getWeaponBonus());
 	}
 	//needs to be updated for equipped weapons
 	public String getDefenseString(){
-		return (stats[DEF]+"");
+		if (getArmorBonus()>0)
+			return (stats[DEF]+"+"+getArmorBonus());
+		else
+			return stats[DEF]+"";
 	}
 	public String getSavesString(){
 		return saves+"";
 	}
+	public void setWeapon(int w){
+		weapon=w;
+	}
+	public void setArmor(int a){
+		armor=a;
+	}
 	//not yet working, might want to use a graphic
 	public String getWeaponName(){
 		return "";
+	}
+	/**
+	 * Checks the currently equipped weapon, and gets its species-specific attack
+	 * bonus
+	 * crossrefs constants
+	 * might be incorporated into asbonus
+	 * fails with error for debug purposes
+	 */
+	public int getWeaponBonus(){
+		if (weapon>-1)
+			return MConst.equipMap.get(weapon).getAtkBonus(getSpeciesID());
+		else
+			return 0;
+	}
+	/**
+	 * Checks the currently equipped weapon, and gets its species-specific 
+	 * defense bonus
+	 * crossrefs constants
+	 * might be incorporated into attack calc
+	 * fails with error for debug purposes
+	 */
+	public int getArmorBonus(){
+		if (armor>-1)
+			return MConst.equipMap.get(armor).getDefBonus(getSpeciesID());
+		else
+			return 0;
+	}
+	public int getTotalArmor(){
+		return getArmorBonus()+stats[DEF];
 	}
 	//not yet working, might want to use a graphic
 	public String getArmorName(){
@@ -268,8 +307,8 @@ public class MeriPet {
 	 */
 	public static String attack (MeriPet a, MeriPet d){
 		int roll=rand.nextInt(21)+1;
-		int damage = getASbonus(a.stats[ATK])+roll;
-		int net = Math.max(0, damage-d.stats[DEF]);
+		int damage = getASbonus(a.stats[ATK])+a.getWeaponBonus()+roll;
+		int net = Math.max(0, damage-d.getTotalArmor());
 		String battlelog=a.name+" attacked "+d.name+" for "+damage+
 				", dealing "+net+" total! (Rolled "+roll+")";
 		System.out.println(battlelog); //placeholder?

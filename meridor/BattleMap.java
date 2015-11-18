@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -128,6 +129,33 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 		tilemap[6][5].setTerrain(potion);
 	}
 	/**
+	 * Takes a four integer array as parameter
+	 * First two ints are weapons, the other 2 armor
+	 * pick one of each
+	 * it appears that equips can spawn anywhere from rows 4-8 (numbered from 0)
+	 */
+	public void placeEquips(int[]equips){
+		if (tilemap !=null && equips.length>=4){
+			int wchoice=equips[random.nextInt(2)];
+			int achoice=equips[random.nextInt(2)+2];
+			ArrayList<MeriTile> blanks=new ArrayList<MeriTile>();
+			for (int i=0;i<MAPDIM;i++){
+				for (int j=4;j<9;j++){
+					if (tilemap[i][j].terrain==BLANK){
+						blanks.add(tilemap[i][j]);
+					}
+				}
+			}
+			Collections.shuffle(blanks);
+			blanks.get(0).setTerrain(wchoice);
+			blanks.get(1).setTerrain(wchoice);
+			blanks.get(3).setTerrain(achoice);
+			blanks.get(4).setTerrain(achoice);
+		} else {
+			System.out.println("Equipment placing error");
+		}
+	}
+	/**
 	 * Update the locations of meripets from the meripanel
 	 */
 	public void updatePetLocations(ArrayList<MeriPet> petlist){
@@ -145,7 +173,7 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 		for (int i=0;i<MAPDIM;i++){
 			for (int j=0;j<MAPDIM;j++){
 				if (tilemap[i][j].terrain>=MOEHOG && tilemap[i][j].terrain<=D_GRA){
-					tilemap[i][j].setTerrain(BLANK);;
+					tilemap[i][j].setTerrain(BLANK);
 				}
 			}
 		}
@@ -506,6 +534,7 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 						break;
 					}
 				}
+				//chug a potion
 			} else if (isPotion(tilemap[xc][yc].terrain)){
 				parent.selected.setLocation(xc, yc);
 				if (parent.selected.dmg>0){
@@ -515,9 +544,27 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 				} else {
 					parent.updateBattleLog(parent.selected+" drinks a potion. But it was already at full health!");
 				}
-
 				parent.resolvePlayerMove();
-			} //additional cases go here 
+				//pick up weapon
+			} else if (isWeapon(tilemap[xc][yc].terrain)){
+				if (parent.selected.weapon>-1){
+					tilemap[parent.selected.getLocation()[0]][parent.selected.getLocation()[1]].setTerrain(parent.selected.weapon);					
+				}
+				parent.updateBattleLog(parent.selected+" equips a "+MConst.equipMap.get(tilemap[xc][yc].terrain).name+"!");
+				parent.selected.setWeapon(tilemap[xc][yc].terrain);
+				parent.selected.setLocation(xc, yc);
+				parent.resolvePlayerMove();
+				//pick up armor
+			} else if (isArmor(tilemap[xc][yc].terrain)){
+				if (parent.selected.armor>-1){
+					tilemap[parent.selected.getLocation()[0]][parent.selected.getLocation()[1]].setTerrain(parent.selected.armor);					
+				}
+				parent.updateBattleLog(parent.selected+" equips a "+MConst.equipMap.get(tilemap[xc][yc].terrain).name+"!");
+				parent.selected.setArmor(tilemap[xc][yc].terrain);
+				parent.selected.setLocation(xc, yc);
+				parent.resolvePlayerMove();
+			}
+			//additional cases go here 
 			else {
 				//if ally pet, resolve special abilities: healing/disenchantments
 				parent.setSelected(null);

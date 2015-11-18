@@ -111,7 +111,13 @@ public class MeriPanel extends JPanel implements MouseListener{
 		bm.updatePetLocations(getPetLocations());
 		bm.placeTreasure(MConst.CROWN_);
 		bm.placePotions(MConst.P_FORT);
-		updateBattleLog("Turn "+(turnCount++));
+		bm.placeEquips(new int[]{
+				MConst.getWeaponIDList()[random.nextInt(MConst.getWeaponIDList().length)],
+				MConst.getWeaponIDList()[random.nextInt(MConst.getWeaponIDList().length)],
+				MConst.getArmorIDList()[random.nextInt(MConst.getArmorIDList().length)],
+				MConst.getArmorIDList()[random.nextInt(MConst.getArmorIDList().length)]
+				});
+		updateBattleLog("Turn "+(++turnCount));
 //		sp=new SelectParty();
 //		c.gridx=0;
 //		c.gridy=0;
@@ -495,17 +501,23 @@ public class MeriPanel extends JPanel implements MouseListener{
 			Object[][]allies=new Object[ally.size()][];
 			for (int i=0;i<ally.size();i++){
 				Object[]mstats=new Object[8];
-				mstats[0]=ally.get(i).getSpeciesName();
+				mstats[0]=MConst.imageIconMap.get(ally.get(i).getSpeciesID());
 				mstats[1]=ally.get(i).getNameNRank();
 				mstats[2]=ally.get(i).getDmgNHealth();
 				mstats[3]=ally.get(i).getAttackString();
-				mstats[4]=ally.get(i).getWeaponName();
+				mstats[4]=MConst.imageIconMap.get(ally.get(i).weapon);
 				mstats[5]=ally.get(i).getDefenseString();
-				mstats[6]=ally.get(i).getArmorName();
+				mstats[6]=MConst.imageIconMap.get(ally.get(i).armor);
 				mstats[7]=ally.get(i).getSavesString();
 				allies[i]=mstats;
 			}
-			allytable=new JTable(allies,ALLYCOLS);
+			DefaultTableModel sdtm=new DefaultTableModel(allies,ALLYCOLS){
+				public Class getColumnClass(int c){
+					return getValueAt(0,c).getClass();
+				}
+			};
+			allytable=new JTable(sdtm);
+			allytable.setRowHeight(30);
 			allytable.getColumnModel().getColumn(0).setPreferredWidth(120);
 			allytable.getColumnModel().getColumn(1).setPreferredWidth(200);
 			allytable.setEnabled(false); //not ideal, fix later
@@ -518,7 +530,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 			Object[][]foes=new Object[foe.size()][];
 			for (int i=0;i<foe.size();i++){
 				Object[]mstats=new Object[8];
-				mstats[0]=foe.get(i).getSpeciesName();
+				mstats[0]=MConst.imageIconMap.get(foe.get(i).getSpeciesID());
 				mstats[1]=foe.get(i).name;
 				mstats[2]=foe.get(i).getCurrHealth();
 				mstats[3]=foe.get(i).getAttackString();
@@ -528,7 +540,13 @@ public class MeriPanel extends JPanel implements MouseListener{
 				mstats[7]="";
 				foes[i]=mstats;
 			}
-			foetable=new JTable(foes,FOECOLS);
+			DefaultTableModel sdtm=new DefaultTableModel(foes,FOECOLS){
+				public Class getColumnClass(int c){
+					return getValueAt(0,c).getClass();
+				}
+			};
+			foetable=new JTable(sdtm);
+			foetable.setRowHeight(30);
 			foetable.getColumnModel().getColumn(0).setPreferredWidth(120);
 			foetable.getColumnModel().getColumn(1).setPreferredWidth(200);
 			foetable.setEnabled(false);
@@ -606,13 +624,13 @@ public class MeriPanel extends JPanel implements MouseListener{
 				mname[0]=ally.get(i).name;
 				mname[1]=new Boolean(false);
 				Object[]mstats=new Object[8];
-				mstats[0]=ally.get(i).getSpeciesName();
+				mstats[0]=MConst.imageIconMap.get(ally.get(i).getSpeciesID());
 				mstats[1]=ally.get(i).getRank();
 				mstats[2]=ally.get(i).getDmgNHealth();
 				mstats[3]=ally.get(i).getAttackString();
-				mstats[4]=ally.get(i).getWeaponName();
+				mstats[4]=MConst.imageIconMap.get(ally.get(i).weapon);
 				mstats[5]=ally.get(i).getDefenseString();
-				mstats[6]=ally.get(i).getArmorName();
+				mstats[6]=MConst.imageIconMap.get(ally.get(i).armor);
 				mstats[7]=ally.get(i).getSavesString();
 				allyname[i]=mname;
 				allystats[i]=mstats;
@@ -661,7 +679,13 @@ public class MeriPanel extends JPanel implements MouseListener{
 			
 			selector = new JTable(tablemodel);
 			
-			statdisplayer=new JTable(allystats,STATCOLS);
+			DefaultTableModel sdtm=new DefaultTableModel(allystats,STATCOLS){
+				public Class getColumnClass(int c){
+					return getValueAt(0,c).getClass();
+				}
+			};
+			statdisplayer=new JTable(sdtm);
+			statdisplayer.setRowHeight(30);
 			statdisplayer.getColumnModel().getColumn(0).setPreferredWidth(120);
 			statdisplayer.setEnabled(false); //not ideal, fix later
 		}
@@ -736,6 +760,9 @@ public class MeriPanel extends JPanel implements MouseListener{
 			repaint();
 		}
 	}
+	private class ClassyTableModel extends DefaultTableModel {
+		
+	}
 	
 	/**
 	 * Displays key information about player stats on screen bottom
@@ -799,9 +826,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 					processFoeTurn();
 					refreshAllyMove();
 					updateVillagesLeft();
-					updateBattleLog("Turn "+(turnCount++));
-//					bm.revalidate();
-//					bm.repaint();
+					updateBattleLog("Turn "+(++turnCount));
 				}
 			}
 			if (e.getSource()==deselectbutton){
@@ -829,8 +854,6 @@ public class MeriPanel extends JPanel implements MouseListener{
 	}
 	@Override
 	public void mousePressed(MouseEvent arg0) {
-		System.out.println("pressed");
-		
 	}
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
