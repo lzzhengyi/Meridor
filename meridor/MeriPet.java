@@ -77,22 +77,70 @@ public class MeriPet {
 		
 		promoted=false;
 
-		//for meridell defenders
-		if (sc==VILLAGER){
-			for (int i=0;i<stats.length;i++){
-				stats[i]=Math.min(
-						STATCAPS[i],
-						species.basestats[i]+rand.nextInt(5)
-				);
-			}
-		} else {
-			for (int i=0;i<stats.length;i++){
-				stats[i]=Math.min(
-						STATCAPS[i],
-						species.basestats[i]+rand.nextInt(5)
-				);
-			}
+		for (int i=0;i<stats.length;i++){
+			stats[i]=Math.min(
+					STATCAPS[i],
+					species.basestats[i]+rand.nextInt(5)
+			);
 		}
+		
+		//for meridell defenders (deprecated)
+//		if (sc==VILLAGER){
+//			for (int i=0;i<stats.length;i++){
+//				stats[i]=Math.min(
+//						STATCAPS[i],
+//						species.basestats[i]+rand.nextInt(5)
+//				);
+//			}
+//		} else {
+//			for (int i=0;i<stats.length;i++){
+//				stats[i]=Math.min(
+//						STATCAPS[i],
+//						species.basestats[i]+rand.nextInt(5)
+//				);
+//			}
+//		}
+	}
+	/**
+	 * Constructor for specific scenario enemies
+	 * Stats are passed directly to the pet
+	 * the int[] consists of: species, minhp,maxhp,minatk,maxatk,mindef,maxdef
+	 * needs to be at least 7 long
+	 */
+	public MeriPet (String n, int[] st){
+		name=n;
+		species=SPEC[st[0]];
+		saves=0;
+		weapon=-1;
+		armor=-1;
+		dmg=0;
+		moves=0;
+		tele=0;
+		
+		promoted=false;
+		
+		int hp=0;
+		int at=0;
+		int de=0;
+		
+		if (st[1]==st[2]){
+			hp=st[1];
+		} else {
+			hp=st[1]+random.nextInt(st[2]-st[1]);
+		}
+		if (st[3]==st[4]){
+			at=st[3];
+		} else {
+			at=st[3]+random.nextInt(st[4]-st[3]);
+		}
+		if (st[5]==st[6]){
+			de=st[5];
+		} else {
+			de=st[5]+random.nextInt(st[6]-st[5]);
+		}
+		
+		stats=new int[]{hp,at,de};
+
 	}
 	/**
 	 * This constructor returns a new meripet that duplicates the original but is of a different species

@@ -26,13 +26,13 @@ public class MeriPanel extends JPanel implements MouseListener{
 	final static int IMGMARGIN=5; //5 pixels to display status
 	final static int TILEDIM=IMGDIM+IMGMARGIN+2; //total size of cells
 	public MeriTile [][] tilemap;
-	public Random random;
+	public static Random random =new Random();
 	public ArrayList<MeriPet> ally,foe;
 	//public boolean playerturn; //what is this even for??? autoresolve!!!
 	public int movesLeft;
 	public int villagesLeft;
 	public int turnCount=0;
-	public int campaign=2;
+	public Campaign campaign;
 	public MeriPet selected;
 	
 	ArrayList<String> battlelogtext=new ArrayList<String>();
@@ -51,27 +51,29 @@ public class MeriPanel extends JPanel implements MouseListener{
 		villagesLeft=MAX_VILLAGES;
 		selected=null;
 		
+//		startNewCampaign();
+		
 		ally=new ArrayList<MeriPet>();
 		foe=new ArrayList<MeriPet>();
-		
-		//temporary debug generation of pets
-		for (int i=0;i<5;i++){
-			ally.add(new MeriPet(
-					"Soldier"+i,
-					random.nextInt(5),
-					0));
-			ally.get(i).refreshMove();
-			
-			foe.add(new MeriPet(
-					"Invader"+i,
-					random.nextInt(7)+5,
-					0));
-			foe.add(new MeriPet(
-					"Ravager"+i,
-					random.nextInt(7)+5,
-					0));
-		}
-		placePets();
+//		
+//		//temporary debug generation of pets
+//		for (int i=0;i<5;i++){
+//			ally.add(new MeriPet(
+//					"Soldier"+i,
+//					random.nextInt(5),
+//					0));
+//			ally.get(i).refreshMove();
+//			
+//			foe.add(new MeriPet(
+//					"Invader"+i,
+//					random.nextInt(7)+5,
+//					0));
+//			foe.add(new MeriPet(
+//					"Ravager"+i,
+//					random.nextInt(7)+5,
+//					0));
+//		}
+//		placePets();
 		
 		addMouseListener(this);
 		/*
@@ -108,22 +110,42 @@ public class MeriPanel extends JPanel implements MouseListener{
 		c.gridheight=GridBagConstraints.RELATIVE;
 		add (um,c);
 		
-		bm.updatePetLocations(getPetLocations());
-		bm.placeTreasure(MConst.CROWN_);
-		bm.placePotions(MConst.P_FORT);
-		bm.placeEquips(new int[]{
-				MConst.getWeaponIDList()[random.nextInt(MConst.getWeaponIDList().length)],
-				MConst.getWeaponIDList()[random.nextInt(MConst.getWeaponIDList().length)],
-				MConst.getArmorIDList()[random.nextInt(MConst.getArmorIDList().length)],
-				MConst.getArmorIDList()[random.nextInt(MConst.getArmorIDList().length)]
-				});
-		updateBattleLog("Turn "+(++turnCount));
+
 //		sp=new SelectParty();
 //		c.gridx=0;
 //		c.gridy=0;
 //		c.gridheight=GridBagConstraints.RELATIVE;
 //		sp.setVisible(false);
 //		add(sp,c);
+	}
+	/**
+	 * Intended to be called at the beginning of a battle to set up the field and units
+	 */
+	public void initBattleMap(){
+		bm.genTerrainMap();
+		ally=campaign.allies;
+		foe=campaign.generateFoes();
+		refreshAllyAll();
+		placePets();
+		bm.updatePetLocations(getPetLocations());
+		bm.placeTreasure(MConst.CROWN_);
+		bm.placePotions(MConst.P_FORT);
+		int[]itemList=campaign.getItemList();
+		if (itemList.length<4){
+			bm.placeEquips(new int[]{
+					MConst.getWeaponIDList()[random.nextInt(MConst.getWeaponIDList().length)],
+					MConst.getWeaponIDList()[random.nextInt(MConst.getWeaponIDList().length)],
+					MConst.getArmorIDList()[random.nextInt(MConst.getArmorIDList().length)],
+					MConst.getArmorIDList()[random.nextInt(MConst.getArmorIDList().length)]
+					});
+		} else {
+			bm.placeEquips(itemList);
+		}
+		updateBattleLog("Turn "+(++turnCount));
+	}
+	public void startNewCampaign(){
+		campaign=new Campaign();
+		initBattleMap();
 	}
 	public void updateBattleLog(String change){
 		if (battlelogtext.size()>=MAX_LOGTEXT){
@@ -367,7 +389,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 				if (convert!=null){
 					updateBattleLog(convert.name+" has been freed from darkness!");
 					ally.add(convert);
-					selected.gainSave(campaign);
+					selected.gainSave(campaign.getWave());
 				} else {
 					bm.setTerrain(foe.get(i).getLocation(), MConst.CRATER);
 				}
@@ -397,17 +419,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 	 * and display the hidden panel: the unit select panel
 	 */
 	public void toggleActive (){
-//		bm.setVisible(!bm.isVisible());
-//		um.setVisible(!um.isVisible());
-//		sp.setVisible(!sp.isVisible());
-//
-//		if (um.isVisible()){
-//			um.updateAllyData();
-//			um.updateFoeData();
-//		}
-//		if (sp.isVisible()){
-//			sp.updateStatData();
-//		}
+
 		GridBagConstraints c=new GridBagConstraints();
 		c.weightx=0.5;
 		c.fill=GridBagConstraints.BOTH;

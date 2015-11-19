@@ -24,6 +24,7 @@ public class MeriFrame extends JFrame implements ActionListener {
 		
 		menu=new JMenu("File");
 		newcampaign=new JMenuItem("New");
+		newcampaign.addActionListener(this);
 		save=new JMenuItem("Save");
 		load=new JMenuItem("Load");
 		mitem=new JMenuItem("Toggle displays");
@@ -44,7 +45,10 @@ public class MeriFrame extends JFrame implements ActionListener {
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		if(e.getSource()==mitem){
+		if (e.getSource()==newcampaign){
+			System.out.println("triggered");
+			mpanel.startNewCampaign();
+		} else if(e.getSource()==mitem){
 			mpanel.toggleActive();
 		}
 		
