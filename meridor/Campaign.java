@@ -15,8 +15,6 @@ import static meridor.MConst.*;
  */
 public class Campaign {
 
-	
-	
 	Scenario M0=new Scenario("Mission 1",GOBLET,P_HEAL,new int[]{WMACE,WBSWO,DTHUN,DTHUN},new int[][]{
 		new int[]{D_MOE,8,12,5,9,6,12}
 	},5);
@@ -31,27 +29,27 @@ public class Campaign {
 	},6);
 	Scenario M4=new Scenario("Mission 5",CROWN_,P_FORT,new int[]{SFORC,WBBAX,DHELM,DSHIE},new int[][]{
 		new int[]{D_GRU,15,19,13,16,15,17}
-	},6,2);
+	},6);
 	Scenario M5=new Scenario("Mission 6",ROYPLA,P_MEGA,new int[]{WDEFL,WDEFL,DCOUN,DCOUN},new int[][]{
 		new int[]{D_BUZ,21,21,21,21,21,21},
 		new int[]{D_BUZ,21,21,21,21,21,21},
 		new int[]{D_MOE,17,17,17,17,17,17}
 	},6,2);
 	Scenario M6=new Scenario("Mission 7",ROYTAP,P_WELL,new int[]{WDSWO,WHALB,DCHAI,DLEAT},new int[][]{
-		new int[]{D_BUZ,25,25,25,25,29,29},
+		new int[]{D_BUZ,29,29,25,25,25,25},
 		new int[]{D_BUZ,21,21,21,21,21,21},
 		new int[]{D_BUZ,21,21,21,21,21,21},
 		new int[]{D_TEC,18,18,18,18,18,18}
 	},6,2);
 	Scenario M7=new Scenario("Mission 8",TRECHE,P_FORT,new int[]{SLIGH,SLIGH,DPLAT,DCHAI},new int[][]{
-		new int[]{D_GRA,21,21,21,21,23,23},
+		new int[]{D_GRA,23,23,21,21,21,21},
 		new int[]{D_GRA,22,22,22,22,22,22},
 		new int[]{D_GRA,22,22,22,22,22,22},
-		new int[]{D_GRA,21,21,21,21,23,23},
+		new int[]{D_GRA,23,23,21,21,21,21},
 		new int[]{D_SKE,19,19,19,19,19,19}
 	},6,2);
 	Scenario M8=new Scenario("Mission 9",VASPLE,P_MEGA,new int[]{WDAXE,WDAXE,DTELE,DCHAI},new int[][]{
-		new int[]{D_GRA,27,27,27,27,29,29},
+		new int[]{D_GRA,29,29,26,26,26,26},
 		new int[]{D_GRA,22,22,22,22,22,22},
 		new int[]{D_GRA,22,22,22,22,22,22},
 		new int[]{D_GRA,22,22,22,22,22,22},
@@ -59,12 +57,11 @@ public class Campaign {
 		new int[]{D_SCO,20,20,20,20,20,20}
 	},6,2);
 	Scenario M9=new Scenario("Mission 10",VICORB,P_WELL,new int[]{WDAXE,SLIGH,DPLAT,DCHAI},new int[][]{
-		new int[]{D_BUZ,27,27,27,27,29,29},
-		new int[]{D_BUZ,21,21,21,21,21,21},
+		new int[]{D_BUZ,29,29,27,27,27,27},
 		new int[]{D_BUZ,21,21,21,21,21,21},
 		new int[]{D_GRA,22,22,22,22,22,22},
 		new int[]{D_GRA,22,22,22,22,22,22},
-		new int[]{D_GRA,27,27,27,27,29,29},
+		new int[]{D_GRA,29,29,27,27,27,27},
 		new int[]{D_GRU,23,23,23,23,23,23}
 	},6,2);
 	
@@ -105,13 +102,35 @@ public class Campaign {
 		generateBasicTeam();
 	}
 	/**
+	 * 
+	 */
+	public boolean advance (){
+		++currentBattle;
+		if (currentBattle>=3){
+			currentBattle=0;
+			currentScenario++;
+			treasureCollected=false;
+			return true;
+		}
+		return false;
+	}
+	/**
 	 * returns the list appropriate to the current scenario (4 ints)
 	 */
 	public int[] getItemList(){
 		return scenarios.get(currentScenario).itemIDList;
 	}
+	public int getTreasure(){
+		return scenarios.get(currentScenario).treasureID;
+	}
+	public int getPotion(){
+		return scenarios.get(currentScenario).potionID;
+	}
 	public int getWave(){
 		return scenarios.get(currentScenario).wave;
+	}
+	public String getMissionNScenarioNames(){
+		return "Mission "+(currentScenario+1)+": Battle "+(currentBattle+1);
 	}
 	private void generateBasicTeam(){
 		allies=new ArrayList<MeriPet>();
@@ -129,9 +148,16 @@ public class Campaign {
 	 */
 	public ArrayList<MeriPet> generateFoes(){
 		ArrayList<MeriPet> foearmy=new ArrayList<MeriPet>();
-		for (int i=0;i<scenarios.get(currentScenario).armysize;i++){
+		for (int i=0;i<scenarios.get(currentScenario).armysize+currentBattle;i++){
 			int pid=Math.min(i, scenarios.get(currentScenario).foes.length-1);
-			foearmy.add(new MeriPet("Invader "+(1+i),
+			String name="Invader "+(1+i);
+			//an inelegant way to check if the species of the invader is a dark lord
+			if (scenarios.get(currentScenario).foes[pid][0]==MConst.D_BUZ){
+				name="Dark Lord "+(1+i);
+			} else if (scenarios.get(currentScenario).foes[pid][0]==MConst.D_GRA) {
+				name="Dark Master "+(1+i);
+			}
+			foearmy.add(new MeriPet(name,
 					scenarios.get(currentScenario).foes[pid]));
 		}
 		return foearmy;

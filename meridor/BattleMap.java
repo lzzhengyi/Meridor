@@ -1,5 +1,7 @@
 package meridor;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -41,11 +43,27 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 		random=new Random();
 		parent=p;
 
-		genTerrainMap();
+		genBlankMap();
 		
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		setPreferredSize(new Dimension(getPaneSize()+10,getPaneSize()+10));
+	}
+	/**
+	 * Generates a blank map for display purposes
+	 */
+	private void genBlankMap(){
+		tilemap=new MeriTile[MAPDIM][MAPDIM];
+		int xoff=0;
+		int yoff=0;
+		for (int i=0;i<MAPDIM;i++){
+			for (int j=0;j<MAPDIM;j++){
+				tilemap[i][j]=new MeriTile(i+xoff,j+yoff);
+				yoff+=TILEDIM;
+			}
+			yoff=0;
+			xoff+=TILEDIM;
+		}
 	}
 	public void genTerrainMap(){
 		//mountains on the mid two and outer two, even rows only
@@ -123,6 +141,9 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 	}
 	public void placeTreasure(int treasure){
 		tilemap[4][0].setTerrain(treasure);
+	}
+	public void removeTreasure(){
+		tilemap[4][0].setTerrain(BLANK);
 	}
 	public void placePotions(int potion){
 		tilemap[4][5].setTerrain(potion);
@@ -432,6 +453,13 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 		return getAdj(ref[0],ref[1]).contains(mt);
 	}
 	/**
+	 * Checks all tiles within two range of the passed coordinates
+	 * to see whether they contain the passed MeriTile
+	 */
+	public boolean checkTwoRange(MeriTile mt, int[]ref){
+		return Math.abs(ref[0]-mt.getGridx())<=2 && Math.abs(ref[1]-mt.getGridy())<=2;
+	}
+	/**
 	 * 
 	 * @param clicked: a tile to check
 	 * @return true if the passed coordinate is next to the selected meripet in parent
@@ -476,6 +504,19 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 				tilemap[i][j].draw(g);
 			}
 		}
+		if (parent.checkGameWon()){
+			g.setColor(Color.black);
+			g.setFont(new Font("Castellar", Font.BOLD, 60));
+			g.drawString("VICTORY!", IMGDIM, IMGDIM*MAPDIM/2);
+			g.setFont(new Font("Castellar", Font.BOLD, 20));
+			g.drawString("Click the map to continue...", IMGDIM/2, IMGDIM*MAPDIM*3/4);
+		} else if (parent.checkGameLost()){
+			g.setColor(Color.black);
+			g.setFont(new Font("Castellar", Font.BOLD, 60));
+			g.drawString("DEFEAT...", IMGDIM, IMGDIM*MAPDIM/2);
+			g.setFont(new Font("Castellar", Font.BOLD, 20));
+			g.drawString("Why not restart from the menu?", IMGDIM/2, IMGDIM*MAPDIM*3/4);
+		}
 	}
 	public void actionPerformed(ActionEvent arg0) {
 		// TODO Auto-generated method stub
@@ -498,79 +539,139 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 	//get the coordinate of the player click and attempt to activate a warrior
 	//on that tile
 	public void mousePressed(MouseEvent e) {
-		//the intent of this method is to have the player only able to click
-		//tiles with pets on them
-		//if right click, bring up info screen related to the terrain type?
-		int mx=e.getX();
-		int my=e.getY();
-		int xc=0,yc=0;
-		if (mx<getPaneSize()){
-			xc=mx/MeriTile.TILESIZE;
-		}
-		if (my<getPaneSize()){
-			yc=my/MeriTile.TILESIZE;
-		}
-//		System.out.println(mx+" "+my+"/"+xc+" "+yc);
-		//if no target selected, try to reference parent coordinates to find a pet
-		if (parent.selected==null){
-			for (int i=0;i<parent.ally.size();i++){
-				if (Arrays.equals(parent.ally.get(i).getLocation(),new int[]{xc,yc}) 
-						&& parent.ally.get(i).hasMove()){
-					parent.setSelected(parent.ally.get(i));
-				}
+		if (parent.checkGameWon()){
+			/*
+			 * If the game is won, any click ends the game
+			 */
+			parent.resolveGame();
+		} else if (!parent.checkGameLost()){
+			/*
+			 * If the game is lost, do nothing
+			 * 
+			 * Otherwise, execute player interaction:
+			 */
+			//the intent of this method is to have the player only able to click
+			//tiles with pets on them
+			//if right click, bring up info screen related to the terrain type?
+			int mx=e.getX();
+			int my=e.getY();
+			int xc=0,yc=0;
+			if (mx<getPaneSize()){
+				xc=mx/MeriTile.TILESIZE;
 			}
-		} else if (parent.movesLeft>0 && checkSelectedAdj(new int[]{xc,yc})){
-			//try to move into a blank tile if tile is valid
-			if (tilemap[xc][yc].terrain==BLANK){
-				parent.selected.setLocation(xc, yc);
-				parent.resolvePlayerMove();
-			} else if (isFoePetTerrain(tilemap[xc][yc].terrain)){
-				//try to attack a foe
-				for (int i=0;i<parent.foe.size();i++){
-					if (Arrays.equals(parent.foe.get(i).getLocation(),new int[]{xc,yc})){
-						parent.updateBattleLog(MeriPet.attack(parent.selected, parent.foe.get(i)));
-						//if (selected is not a skeith with berserk axe)
-						parent.resolvePlayerMove();
-						break;
+			if (my<getPaneSize()){
+				yc=my/MeriTile.TILESIZE;
+			}
+//			System.out.println(mx+" "+my+"/"+xc+" "+yc);
+			//if no target selected, try to reference parent coordinates to find a pet
+			if (parent.selected==null){
+				for (int i=0;i<parent.ally.size();i++){
+					if (Arrays.equals(parent.ally.get(i).getLocation(),new int[]{xc,yc}) 
+							&& parent.ally.get(i).hasMove()){
+						parent.setSelected(parent.ally.get(i));
 					}
 				}
-				//chug a potion
-			} else if (isPotion(tilemap[xc][yc].terrain)){
-				parent.selected.setLocation(xc, yc);
-				if (parent.selected.dmg>0){
-					parent.selected.heal(random.nextInt(15)+10);
-					parent.updateBattleLog(parent.selected+" drinks a potion. Its health is now "+
-							parent.selected.getCurrHealth()+" points!");
-				} else {
-					parent.updateBattleLog(parent.selected+" drinks a potion. But it was already at full health!");
-				}
-				parent.resolvePlayerMove();
-				//pick up weapon
-			} else if (isWeapon(tilemap[xc][yc].terrain)){
-				if (parent.selected.weapon>-1){
-					tilemap[parent.selected.getLocation()[0]][parent.selected.getLocation()[1]].setTerrain(parent.selected.weapon);					
-				}
-				parent.updateBattleLog(parent.selected+" equips a "+MConst.equipMap.get(tilemap[xc][yc].terrain).name+"!");
-				parent.selected.setWeapon(tilemap[xc][yc].terrain);
-				parent.selected.setLocation(xc, yc);
-				parent.resolvePlayerMove();
-				//pick up armor
-			} else if (isArmor(tilemap[xc][yc].terrain)){
-				if (parent.selected.armor>-1){
-					tilemap[parent.selected.getLocation()[0]][parent.selected.getLocation()[1]].setTerrain(parent.selected.armor);					
-				}
-				parent.updateBattleLog(parent.selected+" equips a "+MConst.equipMap.get(tilemap[xc][yc].terrain).name+"!");
-				parent.selected.setArmor(tilemap[xc][yc].terrain);
-				parent.selected.setLocation(xc, yc);
-				parent.resolvePlayerMove();
 			}
-			//additional cases go here 
-			else {
-				//if ally pet, resolve special abilities: healing/disenchantments
-				parent.setSelected(null);
+			//if the pet can act, check to see what actions are appropriate
+			else if(parent.movesLeft>0){
+				//teleport to blank squares only
+				if (parent.selected.canTeleport() && tilemap[xc][yc].terrain==BLANK && yc > 2){
+					parent.selected.teleportOnce();
+					parent.selected.setLocation(xc, yc);
+					parent.resolvePlayerMove();
+				}
+				//check for the healing case
+				else if (parent.selected.canHeal() && isAllyPetTerrain(tilemap[xc][yc].terrain)){
+					for (int i=0;i<parent.ally.size();i++){
+						if (parent.ally.get(i) != parent.selected && Arrays.equals(parent.ally.get(i).getLocation(),new int[]{xc,yc}) && parent.ally.get(i).dmg>0){
+							parent.updateBattleLog(MeriPet.heal(parent.selected, parent.ally.get(i)));
+							//if (selected is not a skeith with berserk axe)
+							parent.resolvePlayerMove();
+							break;
+						}
+					}
+				} //check for the ranged attack case
+				else if (parent.selected.canRangeAttack() && 
+						isFoePetTerrain(tilemap[xc][yc].terrain) &&
+						checkTwoRange(tilemap[xc][yc],parent.selected.getLocation())){
+					for (int i=0;i<parent.foe.size();i++){
+						if (Arrays.equals(parent.foe.get(i).getLocation(),new int[]{xc,yc})){
+							parent.updateBattleLog(MeriPet.attack(parent.selected, parent.foe.get(i)));
+							parent.resolvePlayerMove();
+							break;
+						}
+					}
+				} //standard actions
+				else if (checkSelectedAdj(new int[]{xc,yc})){
+					if (isFoePetTerrain(tilemap[xc][yc].terrain)){
+						//try to attack a foe
+						for (int i=0;i<parent.foe.size();i++){
+							if (Arrays.equals(parent.foe.get(i).getLocation(),new int[]{xc,yc})){
+								parent.updateBattleLog(MeriPet.attack(parent.selected, parent.foe.get(i)));
+								parent.resolvePlayerMove();
+								break;
+							}
+						}
+					}
+					//the following actions are only valid if the pet can still move
+					else if (!parent.selected.movesealed){
+						//try to move into a blank tile if tile is valid
+						if (tilemap[xc][yc].terrain==BLANK){
+							parent.selected.setLocation(xc, yc);
+							parent.resolvePlayerMove();
+						}
+						//chug a potion
+						else if (isPotion(tilemap[xc][yc].terrain)){
+							parent.selected.setLocation(xc, yc);
+							if (parent.selected.dmg>0){
+								parent.selected.heal(random.nextInt(15)+10);
+								parent.updateBattleLog(parent.selected.name+" drinks a potion. Its health is now "+
+										parent.selected.getCurrHealth()+" points!");
+							} else {
+								parent.updateBattleLog(parent.selected.name+" drinks a potion. But it was already at full health!");
+							}
+							parent.resolvePlayerMove();
+						}
+						//pick up weapon
+						else if (isWeapon(tilemap[xc][yc].terrain)){
+							if (parent.selected.weapon>-1){
+								tilemap[parent.selected.getLocation()[0]][parent.selected.getLocation()[1]].setTerrain(parent.selected.weapon);					
+							}
+							parent.updateBattleLog(parent.selected.name+" equips a "+MConst.equipMap.get(tilemap[xc][yc].terrain).name+"!");
+							parent.selected.setWeapon(tilemap[xc][yc].terrain);
+							parent.selected.setLocation(xc, yc);
+							parent.resolvePlayerMove();
+							//pick up armor
+						} else if (isArmor(tilemap[xc][yc].terrain)){
+							if (parent.selected.armor>-1){
+								tilemap[parent.selected.getLocation()[0]][parent.selected.getLocation()[1]].setTerrain(parent.selected.armor);					
+							}
+							parent.updateBattleLog(parent.selected.name+" equips a "+MConst.equipMap.get(tilemap[xc][yc].terrain).name+"!");
+							parent.selected.setArmor(tilemap[xc][yc].terrain);
+							parent.selected.setLocation(xc, yc);
+							parent.resolvePlayerMove();
+						} else if (isTreasure(tilemap[xc][yc].terrain)){
+							for (int i=0;i<parent.ally.size();i++){
+								parent.ally.get(i).gainStats(parent.campaign.getWave());
+							}
+							parent.campaign.treasureCollected=true;
+							parent.selected.setLocation(xc, yc);
+							parent.resolvePlayerMove();
+						}
+						//additional cases go here 
+						else {
+							//if ally pet, resolve special abilities: healing/disenchantments
+							parent.setSelected(null);
+						}
+					} else {
+						//if ally pet, resolve special abilities: healing/disenchantments
+						parent.setSelected(null);
+					}
 			}
+
+			}
+			updatePetLocations(parent.getPetLocations());
 		}
-		updatePetLocations(parent.getPetLocations());
 	}
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
@@ -591,10 +692,14 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 			boolean found=false;
 			for (int i=0;i<parent.getPetLocations().size();i++){
 				if (Arrays.equals(parent.getPetLocations().get(i).getLocation(),new int[]{xc,yc})){
-					setToolTipText(parent.getPetLocations().get(i).name);
+					setToolTipText(parent.getPetLocations().get(i).name+" HP:"+parent.getPetLocations().get(i).getDmgNHealth());
 					found=true;
 					break;
 				}
+			}
+			if (isWeapon(tilemap[xc][yc].terrain) || isArmor (tilemap[xc][yc].terrain)){
+				setToolTipText(getEquipToolTipStats(tilemap[xc][yc].terrain));
+				found=true;
 			}
 			if (!found){
 				setToolTipText(null);

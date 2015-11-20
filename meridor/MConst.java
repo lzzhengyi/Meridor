@@ -20,6 +20,15 @@ public class MConst {
 		MOEHOG,SKEITH,TECHO,SCORCH,GRUNDO,
 		D_MOE,D_SKE,D_TEC,D_SCO,D_GRU,D_BUZ,D_GRA
 	};
+	private final static int noeffect=-1;
+	private final static int rangedatk=0;
+	private final static int forceheal=1;
+	private final static int lightning=2;
+	private final static int breakheal=3;
+	private final static int breaktele=4;
+	private final static boolean freetele=true;
+	private final static boolean freeatk=true;
+	
 	final static int MOEHOG=0;
 	final static int SKEITH=1;
 	final static int TECHO=2;
@@ -87,14 +96,7 @@ public class MConst {
 	}
 	public static void initItems(){
 		int [] emptyset=new int[]{};
-		int noeffect=-1;
-		int rangedatk=0;
-		int forceheal=1;
-		int lightning=2;
-		int breakheal=3;
-		int breaktele=4;
-		boolean freetele=true;
-		boolean freeatk=true;
+
 		if (equipMap==null){
 			equipMap=new HashMap<Integer,Equip>();
 			equipMap.put(WMACE, new Equip("Mace",WMACE,WEAPON,1,0,0));
@@ -105,7 +107,7 @@ public class MConst {
 			equipMap.put(WHAMM, new Equip("Hammer",WHAMM,WEAPON,2,0,0));
 			equipMap.put(WBBAX, new Equip("Berserker Battleaxe",WBBAX,
 					WEAPON,!freeatk,freetele,
-					3,0,0,0,0,0,noeffect,
+					3,0,3,0,0,0,noeffect,
 					emptyset,emptyset));
 			equipMap.put(WBOW_, new Equip("Bow",WBOW_,
 					WEAPON,!freeatk,!freetele,
@@ -122,11 +124,11 @@ public class MConst {
 					new int[]{TECHO},emptyset));
 			equipMap.put(WHALB, new Equip("Halberd",WHALB,
 					WEAPON,freeatk,!freetele,
-					5,0,0,0,0,0,noeffect,
+					5,0,5,0,0,0,noeffect,
 					emptyset,emptyset));
 			equipMap.put(WDAXE, new Equip("Double Axe",WDAXE,
 					WEAPON,!freeatk,!freetele,
-					5,0,0,0,5,0,noeffect,
+					5,0,5,0,5,0,noeffect,
 					emptyset,emptyset));
 			equipMap.put(SLIGH, new Equip("Magic Lightning Spell",SLIGH,
 					WEAPON,!freeatk,!freetele,
@@ -239,7 +241,10 @@ public class MConst {
 				System.out.println(tileGraphicMap.size());
 				
 				imageIconMap=new HashMap<Integer,ImageIcon>();
-				for (int j=0;j<tileGraphicMap.size();j++){
+				//I use the unintuitive, hacky method of setting j <= the map's size
+				//because one of the tiles is a blank, meaning the number of tiles is actually
+				//tileGraphicMap.size+1
+				for (int j=0;j<=tileGraphicMap.size();j++){
 					if (j!=BLANK)
 						imageIconMap.put(j, new ImageIcon(tileGraphicMap.get(j)));
 				}
@@ -249,6 +254,14 @@ public class MConst {
 				System.out.println("Import failure");
 			}
 		}
+	}
+	/**
+	 * Check if the tile is passable TO ENEMY CHARACTERS
+	 */
+	public static boolean checkTileIDPassable(int id){
+		return id==BLANK || id == CRATER ||
+				(id>=P_HEAL && id <=P_WELL) ||
+				id>=WMACE;
 	}
 	/**
 	 * IDs of all weapons
@@ -298,6 +311,51 @@ public class MConst {
 		}
 		return iid;
 	}
+	public static String getEquipToolTipStats(int id){
+		return equipMap.get(id).getToolTipStats();
+	}
+	/**
+	 * Checks the passed equipmentID to see if it has the heal ability set
+	 */
+	public static boolean equipCanHeal(int id){
+		return equipMap.containsKey(id) && equipMap.get(id).effectID==forceheal;
+	}
+	public static boolean equipCanLightning(int id){
+		return equipMap.containsKey(id) && equipMap.get(id).effectID==lightning;
+	}
+	public static boolean equipCanRange(int id){
+		return equipMap.containsKey(id) && (equipMap.get(id).effectID==lightning || equipMap.get(id).effectID==rangedatk);
+	}
+	/**
+	 * returns the amount the item increases the teleport stat by
+	 */
+	public static int gainTeleFromEquip(int id){
+		if (equipMap.containsKey(id)){
+			return equipMap.get(id).teleport;
+		} else {
+			return 0;
+		} 
+	}
+	/**
+	 * Checks if the item allows movement after teleport
+	 */
+	public static boolean equipHasFreeTele(int id){
+		return equipMap.containsKey(id) && (equipMap.get(id).freeTele);
+	}
+	/**
+	 * Checks if the item allows infinite movement
+	 */
+	public static boolean equipHasFreeMove(int id){
+		return equipMap.containsKey(id) && (equipMap.get(id).freeAttack);
+	}
+	public static int getEquipMinDmg(int id){
+		if (equipMap.containsKey(id)){
+			return equipMap.get(id).minDamage;
+		} else {
+			return 0;
+		}
+	}
+	//insert code for break skills here
 	/**
 	 * A list of ids of all allied pets
 	 */

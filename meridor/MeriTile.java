@@ -38,8 +38,12 @@ public class MeriTile {
 	public int getGridy(){
 		return y/TILESIZE;
 	}
+	/**
+	 * Checks if a tile is passable TO ENEMIES
+	 * References MConst, which is where tile type traversability info is kept
+	 */
 	public boolean checkPassable(){
-		return terrain==BLANK || terrain==CRATER;
+		return checkTileIDPassable(terrain);
 	}
 	//change to village, mountain, or crater
 	//I guess the equip tracker will pass locations

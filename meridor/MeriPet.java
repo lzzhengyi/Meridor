@@ -57,6 +57,7 @@ public class MeriPet {
 	int tele; //amount of teleports; this is 1 per turn
 	private int[]location;
 	boolean promoted; //whether the pet has been promoted in the current set of battles CLEAR AFTER EACH SET
+	boolean movesealed,healsealed,telesealed; //status effects that can be inflicted on a pet
 	
 	/**
 	 * Minimum constructor for a generic npet includes:
@@ -76,6 +77,9 @@ public class MeriPet {
 		tele=0;
 		
 		promoted=false;
+		movesealed=false;
+		healsealed=false;
+		telesealed=false;
 
 		for (int i=0;i<stats.length;i++){
 			stats[i]=Math.min(
@@ -118,6 +122,9 @@ public class MeriPet {
 		tele=0;
 		
 		promoted=false;
+		movesealed=false;
+		healsealed=false;
+		telesealed=false;
 		
 		int hp=0;
 		int at=0;
@@ -158,6 +165,9 @@ public class MeriPet {
 		
 		setLocation(other.getLocation());
 		promoted=false;
+		movesealed=false;
+		healsealed=false;
+		telesealed=false;
 		
 		stats=other.stats;
 	}
@@ -176,6 +186,15 @@ public class MeriPet {
 					promoted=true;
 				}
 			}
+		} else {
+			boolean canGain=true;
+			for (int i=0;i<RANKREQS.length;i++){
+				if (saves+1==RANKREQS[i]){
+					canGain=false;
+				}
+			}
+			if (canGain)
+				saves++;
 		}
 	}
 	/**
@@ -265,7 +284,13 @@ public class MeriPet {
 	public String getNameNRank(){
 		return name+"/"+getRank();
 	}
+	/**
+	 * Returns the string description of the pet's rank
+	 */
 	public String getRank(){
+		return RANKS[calcRank()];
+	}
+	private int calcRank(){
 		int rank=0;
 		if (saves>=3){
 			rank++;
@@ -282,7 +307,7 @@ public class MeriPet {
 				} 
 			}
 		}
-		return RANKS[rank];
+		return rank;
 	}
 	/**
 	 * Print the currhp and hp separated by slash
@@ -313,10 +338,6 @@ public class MeriPet {
 	public void setArmor(int a){
 		armor=a;
 	}
-	//not yet working, might want to use a graphic
-	public String getWeaponName(){
-		return "";
-	}
 	/**
 	 * Checks the currently equipped weapon, and gets its species-specific attack
 	 * bonus
@@ -346,21 +367,55 @@ public class MeriPet {
 	public int getTotalArmor(){
 		return getArmorBonus()+stats[DEF];
 	}
-	//not yet working, might want to use a graphic
-	public String getArmorName(){
-		return "";
+	/**
+	 * checks if either if the pet's items give it the ability to heal
+	 */
+	public boolean canHeal(){
+		return MConst.equipCanHeal(weapon) || MConst.equipCanHeal(armor);
+	}
+	/**
+	 * checks if either if the pet's items give it the ability to heal
+	 */
+	public boolean canRangeAttack(){
+		return MConst.equipCanRange(weapon) && calcRank()>=2;
+	}
+	/**
+	 * check if the pet can teleport with its current items
+	 */
+	public boolean canTeleport(){
+		return tele>0;
+	}
+	/**
+	 * Checks if attacks and moves cost no move
+	 */
+	public boolean canFreeMove(){
+		return MConst.equipHasFreeMove(weapon) || MConst.equipHasFreeMove(armor);
 	}
 	/**
 	 *An attempt at the damage formula; might want to export this method to const
 	 */
 	public static String attack (MeriPet a, MeriPet d){
-		int roll=rand.nextInt(21)+1;
+		int roll=rand.nextInt(20)+1;
 		int damage = getASbonus(a.stats[ATK])+a.getWeaponBonus()+roll;
 		int net = Math.max(0, damage-d.getTotalArmor());
+		if (net>0){
+			net=Math.max(net, MConst.getEquipMinDmg(a.weapon));
+		}
 		String battlelog=a.name+" attacked "+d.name+" for "+damage+
 				", dealing "+net+" total! (Rolled "+roll+")";
 		System.out.println(battlelog); //placeholder?
 		d.injure(net);
+		return battlelog;
+	}
+	/**
+	 * Current heal formula, subject to revision, heals for 1/2 pet damage
+	 */
+	public static String heal (MeriPet a, MeriPet d){;
+		int net = (a.stats[ATK]+a.getWeaponBonus()+getASbonus(a.stats[ATK]))/2;
+		String battlelog=a.name+" heals "+d.name+" of "+net+
+				" damage!";
+		System.out.println(battlelog); //placeholder?
+		d.heal(net);
 		return battlelog;
 	}
 	/**
@@ -407,8 +462,20 @@ public class MeriPet {
 	 * removes one current move point from the npet
 	 */
 	public void moveOnce (){
-		moves=Math.max(moves-1, 0);
+		if (!canFreeMove()){
+			moves=Math.max(moves-1, 0);
+		}
 //		System.out.println(name+" has "+moves+" moves left.");
+	}
+	/**
+	 * removes one teleport point from the pet (and seals its movement?)
+	 */
+	public void teleportOnce(){
+		tele=Math.max(tele-1, 0);
+		if (MConst.equipHasFreeTele(weapon) || MConst.equipHasFreeTele(armor)){
+			moves++; //to negate the loss in move from moving once
+			movesealed=true;
+		} 
 	}
 	/**
 	 * returns true if dmg>health
@@ -440,7 +507,8 @@ public class MeriPet {
 	 */
 	public void refreshMove (){
 		moves=species.moves+0;
-		tele=1;
+		tele=MConst.gainTeleFromEquip(weapon)+MConst.gainTeleFromEquip(armor);
+		movesealed=false;
 	}
 	/**
 	 * The returned ID should be the one referenced in MConst

@@ -18,7 +18,7 @@ public class MeriFrame extends JFrame implements ActionListener {
 		MConst.loadImages();
 		MConst.initItems();
 		
-		this.setTitle("Invasion of Meridor Alpha");
+		this.setTitle("Defense of Meridor Alpha");
 		mpanel=new MeriPanel();
 		mbar=new JMenuBar();
 		
@@ -41,7 +41,6 @@ public class MeriFrame extends JFrame implements ActionListener {
 		setJMenuBar(mbar);
 		setVisible(true);
 		pack();
-		//setSize(800,800);
 	}
 
 	public void actionPerformed(ActionEvent e) {
