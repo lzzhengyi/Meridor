@@ -3,6 +3,7 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.*;
 
 import javax.swing.*;
 
@@ -13,6 +14,7 @@ public class MeriFrame extends JFrame implements ActionListener {
 	JMenu menu;
 	JMenuBar mbar;
 	JMenuItem mitem,save,load,newcampaign;
+	final JFileChooser fc=new JFileChooser();
 	
 	public MeriFrame (){
 		MConst.loadImages();
@@ -26,7 +28,9 @@ public class MeriFrame extends JFrame implements ActionListener {
 		newcampaign=new JMenuItem("New");
 		newcampaign.addActionListener(this);
 		save=new JMenuItem("Save");
+		save.addActionListener(this);
 		load=new JMenuItem("Load");
+		load.addActionListener(this);
 		mitem=new JMenuItem("Toggle displays");
 		mitem.addActionListener(this);
 		menu.add(newcampaign);
@@ -45,9 +49,52 @@ public class MeriFrame extends JFrame implements ActionListener {
 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource()==newcampaign){
-			System.out.println("triggered");
 			mpanel.startNewCampaign();
-		} else if(e.getSource()==mitem){
+		} 
+		else if (e.getSource()==save){
+			int returnval=fc.showSaveDialog(this);
+			
+			if (returnval==JFileChooser.APPROVE_OPTION){
+				File file=fc.getSelectedFile();
+				try{
+					OutputStream osfile=new FileOutputStream(file);
+					OutputStream buffer=new BufferedOutputStream(osfile);
+					ObjectOutput output=new ObjectOutputStream(buffer);
+					try {
+						output.writeObject(mpanel.campaign);
+					} finally {
+						output.close();
+					}
+				} 
+				catch(IOException ex){
+					System.err.println("File Save error!");
+				} 
+			}
+		}
+		else if (e.getSource()==load){
+			int returnval=fc.showOpenDialog(this);
+			
+			if (returnval==JFileChooser.APPROVE_OPTION){
+				File file=fc.getSelectedFile();
+				try {
+					ObjectInput input=new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)));
+					//deserialize in
+					try {
+						mpanel.campaign=(Campaign)input.readObject();
+						mpanel.startNewCampaign();
+					}finally {
+						input.close();
+					}
+				} 
+				catch(IOException ex){
+					System.err.println("File Load error!");
+				} 
+				catch (ClassNotFoundException e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
+		else if(e.getSource()==mitem){
 			mpanel.toggleActive();
 		}
 		

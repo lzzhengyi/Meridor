@@ -29,7 +29,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 	final static String[] clearlogtext={};
 
 	public MeriTile [][] tilemap;
-	public static Random random =new Random();
+	public static Random random =MConst.random;
 	public ArrayList<MeriPet> ally,foe;
 	public int movesLeft;
 	public int villagesLeft;
@@ -48,34 +48,12 @@ public class MeriPanel extends JPanel implements MouseListener{
 	boolean battlemode=true;
 
 	public MeriPanel (){
-		random=new Random();
 		movesLeft=MAX_MOVES;
 		villagesLeft=MAX_VILLAGES;
 		selected=null;
 
-		//		startNewCampaign();
-
 		ally=new ArrayList<MeriPet>();
 		foe=new ArrayList<MeriPet>();
-		//		
-		//		//temporary debug generation of pets
-		//		for (int i=0;i<5;i++){
-		//			ally.add(new MeriPet(
-		//					"Soldier"+i,
-		//					random.nextInt(5),
-		//					0));
-		//			ally.get(i).refreshMove();
-		//			
-		//			foe.add(new MeriPet(
-		//					"Invader"+i,
-		//					random.nextInt(7)+5,
-		//					0));
-		//			foe.add(new MeriPet(
-		//					"Ravager"+i,
-		//					random.nextInt(7)+5,
-		//					0));
-		//		}
-		//		placePets();
 
 		addMouseListener(this);
 		/*
@@ -156,6 +134,9 @@ public class MeriPanel extends JPanel implements MouseListener{
 		turnCount=0;
 		updateBattleLog("Turn "+(++turnCount));
 	}
+	/**
+	 * Starts the game logic so that the game is playable
+	 */
 	public void startNewCampaign(){
 		campaign=new Campaign();
 		ally=campaign.allies;
@@ -163,6 +144,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 	}
 	/**
 	 * Uses the 10 empty string array to maintain the size of the box while blanking it
+	 * Doesn't work as planned
 	 */
 	public void clearBattleLog (){
 		battlelogtext=new ArrayList<String>(Arrays.asList(clearlogtext));
@@ -275,8 +257,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 	 */
 	public void refreshAllyAll(){
 		for (int i=0;i<ally.size();i++){
-			ally.get(i).refreshMove();
-			ally.get(i).refreshHP();
+			ally.get(i).refreshTotal();
 		}
 	}
 	/**
@@ -307,7 +288,6 @@ public class MeriPanel extends JPanel implements MouseListener{
 		ArrayList <MeriPet> slainallies=new ArrayList<MeriPet>();
 		for (int i=0;i<foe.size();i++){
 			MeriPet chosen=foe.get(i);
-
 			//highest priority: destroy village
 			//this implementation is redundant. I duplicate the search of adj tiles
 			ArrayList<int[]> nearvillages=bm.findAdjVillage(chosen.getLocation()[0], chosen.getLocation()[1]);
@@ -317,96 +297,152 @@ public class MeriPanel extends JPanel implements MouseListener{
 				bm.movePet(chosen, vloc);
 				razeVillage();
 			} else {
+				//split the priorities of dark lords and invaders
+				//dark lords attempt to move down first and attack if they cannot
+				//invaders attack first and move down if there are no foes in range
+				
+				//both invader/dark lord will use the sme algorithm to check for targets
 				ArrayList<MeriPet> targets=bm.findNextFoeTarget(chosen.getLocation()[0], chosen.getLocation()[1]);
 				ArrayList<MeriPet> horitargets=bm.findHoriFoeTarget(chosen.getLocation()[0], chosen.getLocation()[1]);
-				//second priority action: kill npets 
-				if (!targets.isEmpty()){
-					MeriPet target=targets.get(0);
-					updateBattleLog(MeriPet.attack(chosen, target));
-					if (target.checkDead()){
-						updateBattleLog(target.name+" has been corrupted by defeat! Please free them!");
-						ally.remove(target);
-						slainallies.add(target.convert());
-						//I should not need to update the map because:
-						//a)turn is resolved before reprint
-						//b)tile is still classed as ally, but cannot be attacked because not on the ally ArrayList
+				//invader decision tree
+				if (MConst.isDarkLordTerrain(chosen.getSpeciesID())){
+					//first: attempt to cast a seal
+					//this is the only time random is called in a critical function
+					boolean teleseal=random.nextBoolean();
+					MeriPet sealtarget=ally.get(random.nextInt(ally.size()));
+					if (teleseal && sealtarget.canTeleport()){
+						updateBattleLog(MeriPet.castTeleSeal(chosen, sealtarget));
+					} else if (!teleseal && (sealtarget.canHeal() || sealtarget.canLightning())){
+						updateBattleLog(MeriPet.castHealSeal(chosen, sealtarget));
 					}
-				} else if (!horitargets.isEmpty()) { //move towards nearby pets
-//					System.out.println("pathing to nearby player unit");
-					ArrayList<int[]> otp=bm.findOneTilePath(chosen.getLocation(), horitargets.get(0).getLocation());
-					if (otp.size()>0)
-						bm.movePet(chosen, otp.get(0));
-					//remember onetilepath returns a list of potential paths so I take the first one
-				} else {
-					//third highest priority:
-					//if there is a village in the 3 rows centered on foe
-					//move down, prioritizing rows with villages in them
-					int seekvillage=bm.checkVillageInAdjColumn(chosen.getLocation());
-					if (seekvillage>0){
-						//when there's only 1 path down, why choose? only go deeper into logic if there are multiple options,
-						//and one would lead the pet out of the path of villages
-						ArrayList<int[]>path=bm.findOneTilePath(chosen.getLocation(), new int[]{chosen.getLocation()[0],chosen.getLocation()[1]+2});
-						if (path.size()==1){
-							bm.movePet(chosen, path.get(0));							
-						} else {
-							int [] idealmoves=null;
-							if (seekvillage==1){
-								idealmoves=new int[]{chosen.getLocation()[0]-1,chosen.getLocation()[1]+2};
-							} else if (seekvillage==2){
-								idealmoves=new int[]{chosen.getLocation()[0],chosen.getLocation()[1]+2};
-							} else if (seekvillage==3){
-								idealmoves=new int[]{chosen.getLocation()[0]+1,chosen.getLocation()[1]+2};
-							} else {
-								idealmoves=new int[]{};
-								System.out.println("village search error");
-							}
-
-							if (idealmoves.length>0){
-//								System.out.println(chosen.getLocation()[0]+","+chosen.getLocation()[1]+" d:"+idealmoves[0]+","+idealmoves[1]);
-								path=bm.findOneTilePath(chosen.getLocation(), idealmoves);
-								if (path.size()>0){
-									bm.movePet(chosen, path.get(0));
-//									System.out.println(chosen.getLocation()[0]+","+chosen.getLocation()[1]+" d:"+idealmoves[0]+","+idealmoves[1]);								
-								} else {
-									System.out.println(chosen.name+" failed to move...");
-								}
-							} else {
-								//naive movedown
-								ArrayList<MeriTile>below=bm.getAdjBelow(chosen.getLocation()[0], chosen.getLocation()[1]);
-								for (int j=0;j<below.size();j++){
-									if (below.get(i).checkPassable()){
-										bm.movePet(chosen, new int[]{below.get(i).getGridx(),below.get(i).getGridy()});
-										break;
-									}
+					
+					ArrayList<MeriTile>below=bm.getPassableBelow(chosen.getLocation()[0], chosen.getLocation()[1]);
+					//if at or below row 6, move to a nearby village or attack if cannot move
+					if (chosen.getLocation()[1]>=6){
+						//find nearest column with village and move in that direction
+						int direction=bm.getNearestColumnMultiplier(chosen.getLocation()[0]);
+						if (direction==1 || direction==-1){
+							ArrayList<int[]>path=bm.findOneTilePath(chosen.getLocation(), new int[]{chosen.getLocation()[0]+direction*2,chosen.getLocation()[1]});
+							if (path.size()>0){
+								bm.movePet(chosen, path.get(0));								
+							} else if (targets.size()>0) {
+								//attack?
+								MeriPet target=targets.get(0);
+								updateBattleLog(MeriPet.attack(chosen, target));
+								if (target.checkDead()){
+									updateBattleLog(target.name+" has been corrupted by defeat! Please free them!");
+									ally.remove(target);
+									slainallies.add(target.convert());
 								}
 							}
 						}
+					}
+					//if above row 6, move down
+					else if (below.size()>0) {
+						bm.movePet(chosen, new int[]{below.get(0).getGridx(),below.get(0).getGridy()});
+					}
+					//if can't move down, ATTACK
+					else if (targets.size()>0) {
+						MeriPet target=targets.get(0);
+						updateBattleLog(MeriPet.attack(chosen, target));
+						if (target.checkDead()){
+							updateBattleLog(target.name+" has been corrupted by defeat! Please free them!");
+							ally.remove(target);
+							slainallies.add(target.convert());
+						}
+					}
+				}
+				//normal invader decision tree
+				else {
+					//second priority action: kill npets 
+					if (!targets.isEmpty()){
+						MeriPet target=targets.get(0);
+						updateBattleLog(MeriPet.attack(chosen, target));
+						if (target.checkDead()){
+							updateBattleLog(target.name+" has been corrupted by defeat! Please free them!");
+							ally.remove(target);
+							slainallies.add(target.convert());
+							//I should not need to update the map because:
+							//a)turn is resolved before reprint
+							//b)tile is still classed as ally, but cannot be attacked because not on the ally ArrayList
+						}
+					} else if (!horitargets.isEmpty()) { //move towards nearby pets
+//						System.out.println("pathing to nearby player unit");
+						ArrayList<int[]> otp=bm.findOneTilePath(chosen.getLocation(), horitargets.get(0).getLocation());
+						if (otp.size()>0)
+							bm.movePet(chosen, otp.get(0));
+						//remember onetilepath returns a list of potential paths so I take the first one
 					} else {
-						System.out.println("failed"+seekvillage+"/"+chosen.getLocation()[0]+","+chosen.getLocation()[1]);
-						/*final priority: greedy move to column with nearest village?
-						 * move to row 5 if not in row 5
-						 * find column with nearest village, then move in that direction
-						 */
-						//move to row 5
-						if (chosen.getLocation()[1]<5){
+						//third highest priority:
+						//if there is a village in the 3 rows centered on foe
+						//move down, prioritizing rows with villages in them
+						int seekvillage=bm.checkVillageInAdjColumn(chosen.getLocation());
+						if (seekvillage>0){
+							//when there's only 1 path down, why choose? only go deeper into logic if there are multiple options,
+							//and one would lead the pet out of the path of villages
 							ArrayList<int[]>path=bm.findOneTilePath(chosen.getLocation(), new int[]{chosen.getLocation()[0],chosen.getLocation()[1]+2});
-							if (path.size()>0){
-								bm.movePet(chosen, path.get(0));								
+							if (path.size()==1){
+								bm.movePet(chosen, path.get(0));							
+							} else {
+								int [] idealmoves=null;
+								if (seekvillage==1){
+									idealmoves=new int[]{chosen.getLocation()[0]-1,chosen.getLocation()[1]+2};
+								} else if (seekvillage==2){
+									idealmoves=new int[]{chosen.getLocation()[0],chosen.getLocation()[1]+2};
+								} else if (seekvillage==3){
+									idealmoves=new int[]{chosen.getLocation()[0]+1,chosen.getLocation()[1]+2};
+								} else {
+									idealmoves=new int[]{};
+									System.out.println("village search error");
+								}
+
+								if (idealmoves.length>0){
+//									System.out.println(chosen.getLocation()[0]+","+chosen.getLocation()[1]+" d:"+idealmoves[0]+","+idealmoves[1]);
+									path=bm.findOneTilePath(chosen.getLocation(), idealmoves);
+									if (path.size()>0){
+										bm.movePet(chosen, path.get(0));
+//										System.out.println(chosen.getLocation()[0]+","+chosen.getLocation()[1]+" d:"+idealmoves[0]+","+idealmoves[1]);								
+									} else {
+										System.out.println(chosen.name+" failed to move...");
+									}
+								} else {
+									//naive movedown
+									ArrayList<MeriTile>below=bm.getAdjBelow(chosen.getLocation()[0], chosen.getLocation()[1]);
+									for (int j=0;j<below.size();j++){
+										if (below.get(i).checkPassable()){
+											bm.movePet(chosen, new int[]{below.get(i).getGridx(),below.get(i).getGridy()});
+											break;
+										}
+									}
+								}
 							}
-						} else if (chosen.getLocation()[1]>7){
-							//hack to get people out of the bottom rows if there are no villages nearby
-							ArrayList<int[]>path=bm.findOneTilePath(chosen.getLocation(), new int[]{chosen.getLocation()[0],chosen.getLocation()[1]-2});
-							if (path.size()>0){
-								System.out.println(chosen.name+" somehow reached the bottom");
-								bm.movePet(chosen, path.get(0));								
-							}					
 						} else {
-							//find nearest column with village and move in that direction
-							int direction=bm.getNearestColumnMultiplier(chosen.getLocation()[0]);
-							if (direction==1 || direction==-1){
-								ArrayList<int[]>path=bm.findOneTilePath(chosen.getLocation(), new int[]{chosen.getLocation()[0]+direction*2,chosen.getLocation()[1]});
+							System.out.println("failed"+seekvillage+"/"+chosen.getLocation()[0]+","+chosen.getLocation()[1]);
+							/*final priority: greedy move to column with nearest village?
+							 * move to row 5 if not in row 5
+							 * find column with nearest village, then move in that direction
+							 */
+							//move to row 6
+							if (chosen.getLocation()[1]<6){
+								ArrayList<int[]>path=bm.findOneTilePath(chosen.getLocation(), new int[]{chosen.getLocation()[0],chosen.getLocation()[1]+2});
 								if (path.size()>0){
 									bm.movePet(chosen, path.get(0));								
+								}
+							} else if (chosen.getLocation()[1]>7){
+								//hack to get people out of the bottom rows if there are no villages nearby
+								ArrayList<int[]>path=bm.findOneTilePath(chosen.getLocation(), new int[]{chosen.getLocation()[0],chosen.getLocation()[1]-2});
+								if (path.size()>0){
+									System.out.println(chosen.name+" somehow reached the bottom");
+									bm.movePet(chosen, path.get(0));								
+								}					
+							} else {
+								//find nearest column with village and move in that direction
+								int direction=bm.getNearestColumnMultiplier(chosen.getLocation()[0]);
+								if (direction==1 || direction==-1){
+									ArrayList<int[]>path=bm.findOneTilePath(chosen.getLocation(), new int[]{chosen.getLocation()[0]+direction*2,chosen.getLocation()[1]});
+									if (path.size()>0){
+										bm.movePet(chosen, path.get(0));								
+									}
 								}
 							}
 						}
@@ -590,8 +626,10 @@ public class MeriPanel extends JPanel implements MouseListener{
 			};
 			allytable=new JTable(sdtm);
 			allytable.setRowHeight(30);
-			allytable.getColumnModel().getColumn(0).setPreferredWidth(120);
-			allytable.getColumnModel().getColumn(1).setPreferredWidth(200);
+			allytable.getColumnModel().getColumn(0).setPreferredWidth(34);
+			allytable.getColumnModel().getColumn(1).setPreferredWidth(220);
+			allytable.getColumnModel().getColumn(4).setPreferredWidth(34);
+			allytable.getColumnModel().getColumn(6).setPreferredWidth(34);
 			allytable.setEnabled(false); //not ideal, fix later
 		}
 		/**
@@ -604,7 +642,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 				Object[]mstats=new Object[8];
 				mstats[0]=MConst.imageIconMap.get(foe.get(i).getSpeciesID());
 				mstats[1]=foe.get(i).name;
-				mstats[2]=foe.get(i).getCurrHealth();
+				mstats[2]=foe.get(i).getCurrHealth()+"";
 				mstats[3]=foe.get(i).getAttackString();
 				mstats[4]="";
 				mstats[5]=foe.get(i).getDefenseString();
@@ -619,8 +657,10 @@ public class MeriPanel extends JPanel implements MouseListener{
 			};
 			foetable=new JTable(sdtm);
 			foetable.setRowHeight(30);
-			foetable.getColumnModel().getColumn(0).setPreferredWidth(120);
-			foetable.getColumnModel().getColumn(1).setPreferredWidth(200);
+			foetable.getColumnModel().getColumn(0).setPreferredWidth(34);
+			foetable.getColumnModel().getColumn(1).setPreferredWidth(220);
+			foetable.getColumnModel().getColumn(4).setPreferredWidth(34);
+			foetable.getColumnModel().getColumn(6).setPreferredWidth(34);
 			foetable.setEnabled(false);
 		}
 		/**

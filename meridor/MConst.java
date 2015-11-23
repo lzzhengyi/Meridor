@@ -20,6 +20,7 @@ public class MConst {
 		MOEHOG,SKEITH,TECHO,SCORCH,GRUNDO,
 		D_MOE,D_SKE,D_TEC,D_SCO,D_GRU,D_BUZ,D_GRA
 	};
+	public enum DARKLORDS {D_BUZ,D_GRA};
 	private final static int noeffect=-1;
 	private final static int rangedatk=0;
 	private final static int forceheal=1;
@@ -326,6 +327,12 @@ public class MConst {
 	public static boolean equipCanRange(int id){
 		return equipMap.containsKey(id) && (equipMap.get(id).effectID==lightning || equipMap.get(id).effectID==rangedatk);
 	}
+	public static boolean equipBreaksHealSeal(int id){
+		return equipMap.containsKey(id) && (equipMap.get(id).effectID==breakheal);
+	}
+	public static boolean equipBreaksTeleSeal(int id){
+		return equipMap.containsKey(id) && (equipMap.get(id).effectID==breaktele);
+	}
 	/**
 	 * returns the amount the item increases the teleport stat by
 	 */
@@ -391,6 +398,12 @@ public class MConst {
 	 */
 	public static boolean isFoePetTerrain(int tileID){
 		return tileID>=D_MOE && tileID<=D_GRA;
+	}
+	/**
+	 * Check if the terrain type represents a dark lord
+	 */
+	public static boolean isDarkLordTerrain(int tileID){
+		return tileID==D_GRA || tileID==D_BUZ;
 	}
 	public static int getFoeVersionOfAlly(int sid){
 		switch (sid){

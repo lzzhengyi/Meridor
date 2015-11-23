@@ -44,7 +44,6 @@ public class MeriPet {
 	
 	final static int VILLAGER = -1;
 	
-	static Random rand=new Random ();
 	String name;
 	final Species species; //contains racial information for the pet
 	int[] stats={10,5,5}; //contains current base stats
@@ -84,7 +83,7 @@ public class MeriPet {
 		for (int i=0;i<stats.length;i++){
 			stats[i]=Math.min(
 					STATCAPS[i],
-					species.basestats[i]+rand.nextInt(5)
+					species.basestats[i]+random.nextInt(5)
 			);
 		}
 		
@@ -369,9 +368,16 @@ public class MeriPet {
 	}
 	/**
 	 * checks if either if the pet's items give it the ability to heal
+	 * takes into account healseal by the enemy
 	 */
 	public boolean canHeal(){
-		return MConst.equipCanHeal(weapon) || MConst.equipCanHeal(armor);
+		return !healsealed && MConst.equipCanHeal(weapon) || MConst.equipCanHeal(armor);
+	}
+	/**
+	 * checks if either if the pet's items give it the ability to use lightning
+	 */
+	public boolean canLightning(){
+		return MConst.equipCanLightning(weapon) || MConst.equipCanLightning(armor);
 	}
 	/**
 	 * checks if either if the pet's items give it the ability to heal
@@ -381,9 +387,10 @@ public class MeriPet {
 	}
 	/**
 	 * check if the pet can teleport with its current items
+	 * takes into account teleseal from the enemy
 	 */
 	public boolean canTeleport(){
-		return tele>0;
+		return tele>0 && !telesealed;
 	}
 	/**
 	 * Checks if attacks and moves cost no move
@@ -392,10 +399,22 @@ public class MeriPet {
 		return MConst.equipHasFreeMove(weapon) || MConst.equipHasFreeMove(armor);
 	}
 	/**
+	 * Check if the pet can clear another pet's teleseal status
+	 */
+	public boolean canBreakTeleSeal(){
+		return MConst.equipBreaksTeleSeal(weapon) || MConst.equipBreaksTeleSeal(armor);
+	}
+	/**
+	 * Check if the pet can clear another pet's heal seal status
+	 */
+	public boolean canBreakHealSeal(){
+		return MConst.equipBreaksHealSeal(weapon) || MConst.equipBreaksHealSeal(armor);
+	}
+	/**
 	 *An attempt at the damage formula; might want to export this method to const
 	 */
 	public static String attack (MeriPet a, MeriPet d){
-		int roll=rand.nextInt(20)+1;
+		int roll=random.nextInt(20)+1;
 		int damage = getASbonus(a.stats[ATK])+a.getWeaponBonus()+roll;
 		int net = Math.max(0, damage-d.getTotalArmor());
 		if (net>0){
@@ -410,12 +429,48 @@ public class MeriPet {
 	/**
 	 * Current heal formula, subject to revision, heals for 1/2 pet damage
 	 */
-	public static String heal (MeriPet a, MeriPet d){;
+	public static String heal (MeriPet a, MeriPet d){
 		int net = (a.stats[ATK]+a.getWeaponBonus()+getASbonus(a.stats[ATK]))/2;
 		String battlelog=a.name+" heals "+d.name+" of "+net+
 				" damage!";
 		System.out.println(battlelog); //placeholder?
 		d.heal(net);
+		return battlelog;
+	}
+	/**
+	 * The target casts a spell that seals the meripet's ability to teleport
+	 */
+	public static String castTeleSeal (MeriPet a, MeriPet d){
+		String battlelog=a.name+" seals "+d.name+"'s ability to teleport!";
+		System.out.println(battlelog); //placeholder?
+		d.telesealed=true;
+		return battlelog;
+	}
+	/**
+	 * The target casts a spell that seals the meripet's ability to heal
+	 */
+	public static String castHealSeal (MeriPet a, MeriPet d){
+		String battlelog=a.name+" seals "+d.name+"'s ability to heal!";
+		System.out.println(battlelog); //placeholder?
+		d.healsealed=true;
+		return battlelog;
+	}
+	/**
+	 * Removes the Telesealed condition
+	 */
+	public static String breakTeleSeal (MeriPet a, MeriPet d){
+		String battlelog=a.name+" restores "+d.name+"'s ability to teleport!";
+		System.out.println(battlelog); //placeholder?
+		d.telesealed=false;
+		return battlelog;
+	}
+	/**
+	 * Removes the healsealed condition
+	 */
+	public static String breakHealSeal (MeriPet a, MeriPet d){
+		String battlelog=a.name+" restores "+d.name+"'s ability to heal others!";
+		System.out.println(battlelog); //placeholder?
+		d.healsealed=false;
 		return battlelog;
 	}
 	/**
@@ -495,6 +550,16 @@ public class MeriPet {
 	 */
 	public void heal (int i){
 		dmg=Math.max(dmg-i, 0);
+	}
+	/**
+	 * Use this to clear any mission specific attrition
+	 * hp, move, status effects
+	 */
+	public void refreshTotal(){
+		healsealed=false;
+		telesealed=false;
+		refreshMove();
+		refreshHP();
 	}
 	/**
 	 * Use this to heal health between missions

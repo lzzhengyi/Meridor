@@ -33,14 +33,12 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 	//BufferedImage buzz;
 	private int [] mouseLocation={0,0};
 	public MeriTile [][] tilemap;
-	private Random random;
 	private MeriPanel parent;
 	
 	//level is needed to restrict spawned items and enemies
 	public BattleMap (int level, MeriPanel p){
 		setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 		
-		random=new Random();
 		parent=p;
 
 		genBlankMap();
@@ -253,6 +251,18 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 			results.addAll(left);
 		}
 		return results;
+	}
+	/**
+	 * Check if the three tiles below the pet are passable
+	 */
+	public ArrayList <MeriTile> getPassableBelow (int x, int y){
+		ArrayList<MeriTile>below=getAdjBelow(x,y);
+		for (int i=below.size()-1;i>=0;i--){
+			if (!below.get(i).checkPassable()){
+				below.remove(i);
+			}
+		}
+		return below;
 	}
 	/**
 	 * returns 3 below only
@@ -580,17 +590,55 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 					parent.selected.setLocation(xc, yc);
 					parent.resolvePlayerMove();
 				}
+				//check for the lightning case
+				else if (parent.selected.canLightning() && isAllyPetTerrain(tilemap[xc][yc].terrain)){
+					for (int i=0;i<parent.ally.size();i++){
+						if (parent.ally.get(i) != parent.selected && parent.ally.get(i).getLocation()[0]==xc && parent.ally.get(i).dmg>0 && parent.ally.get(i).moves>0){
+							parent.ally.get(i).moveOnce();
+							parent.updateBattleLog(MeriPet.heal(parent.selected, parent.ally.get(i)));
+							parent.resolvePlayerMove();
+							break;
+						}
+					}
+				} 
 				//check for the healing case
 				else if (parent.selected.canHeal() && isAllyPetTerrain(tilemap[xc][yc].terrain)){
 					for (int i=0;i<parent.ally.size();i++){
 						if (parent.ally.get(i) != parent.selected && Arrays.equals(parent.ally.get(i).getLocation(),new int[]{xc,yc}) && parent.ally.get(i).dmg>0){
 							parent.updateBattleLog(MeriPet.heal(parent.selected, parent.ally.get(i)));
-							//if (selected is not a skeith with berserk axe)
 							parent.resolvePlayerMove();
 							break;
 						}
 					}
-				} //check for the ranged attack case
+				}
+				/*
+				 * There is an obvious bug here: if a pet can simultaneously heal either seal,
+				 * the code won't actually let them heal both seals, and it won't heal tele seal
+				 * if the healer can ALSO cure heal seal if the target is not healsealed
+				 * 
+				 * not relevant to the present build because abilities are almost completely unique
+				 */
+				//check for whether the pet can cure healseal
+				else if (parent.selected.canBreakHealSeal() && isAllyPetTerrain(tilemap[xc][yc].terrain)){
+					for (int i=0;i<parent.ally.size();i++){
+						if (parent.ally.get(i) != parent.selected && Arrays.equals(parent.ally.get(i).getLocation(),new int[]{xc,yc}) && parent.ally.get(i).healsealed){
+							parent.updateBattleLog(MeriPet.breakHealSeal(parent.selected, parent.ally.get(i)));
+							parent.resolvePlayerMove();
+							break;
+						}
+					}
+				}
+				//check for whether the pet can cure teleseal
+				else if (parent.selected.canBreakTeleSeal() && isAllyPetTerrain(tilemap[xc][yc].terrain)){
+					for (int i=0;i<parent.ally.size();i++){
+						if (parent.ally.get(i) != parent.selected && Arrays.equals(parent.ally.get(i).getLocation(),new int[]{xc,yc}) && parent.ally.get(i).telesealed){
+							parent.updateBattleLog(MeriPet.breakTeleSeal(parent.selected, parent.ally.get(i)));
+							parent.resolvePlayerMove();
+							break;
+						}
+					}
+				}
+				//check for the ranged attack case
 				else if (parent.selected.canRangeAttack() && 
 						isFoePetTerrain(tilemap[xc][yc].terrain) &&
 						checkTwoRange(tilemap[xc][yc],parent.selected.getLocation())){

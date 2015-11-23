@@ -10,22 +10,10 @@ public class Equip {
 	int waID; //used to identity the weapon/draw image by the program
 	int def, atk, sdef, satk, minDamage, teleport;
 	int effectID;
-//	SpecBon specbon;
 	int[] restrictedSpecies;//if a species of this id picks up the item, destroy it
-	//need a variable that tracks the ids of pets that can equip it
 	boolean equipType, freeAttack, freeTele;
 	int [] bonusSpecies, destroySpecies;
-	
-//	public Equip (String n, int id, int iid, int eid, int a, int d,
-//			int ba, int bd, int bsid){
-//		specbon=new SpecBon (ba, bd, bsid);
-//		imageID=iid;
-//		name=n;
-//		waID=id;
-//		atk=d;
-//		def=d;
-//		effectID=eid;
-//	}
+
 	/*
 	 * prototype initializer
 	 * boolean:
@@ -152,18 +140,4 @@ public class Equip {
 			return def;
 		}
 	}
-//	
-//	private class SpecBon {
-//		
-//		int atkBonus, defBonus, speciesID;
-//		
-//		private SpecBon (int ab, int db, int sid){
-//			atkBonus=ab;
-//			defBonus=db;
-//			speciesID=sid;
-//		}
-//	
-//	}
-
-
 }

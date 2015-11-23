@@ -1,5 +1,6 @@
 package meridor;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import static meridor.MConst.*;
 /**
@@ -13,8 +14,12 @@ import static meridor.MConst.*;
  * -this reads the scenario information from an external file or a set of hardcoded instructions
  *  
  */
-public class Campaign {
+public class Campaign implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	Scenario M0=new Scenario("Mission 1",GOBLET,P_HEAL,new int[]{WMACE,WBSWO,DTHUN,DTHUN},new int[][]{
 		new int[]{D_MOE,8,12,5,9,6,12}
 	},5);
@@ -113,6 +118,17 @@ public class Campaign {
 			return true;
 		}
 		return false;
+	}
+	/**
+	 * Resets all attrited stats for allied units between fights
+	 * used for save/load
+	 */
+	public void refreshAllyAll(){
+		if (allies!=null){
+			for (int i=0;i<allies.size();i++){
+				allies.get(i).refreshTotal();
+			}
+		}
 	}
 	/**
 	 * returns the list appropriate to the current scenario (4 ints)
