@@ -143,6 +143,17 @@ public class MeriPanel extends JPanel implements MouseListener{
 		toggleActive();
 	}
 	/**
+	 * Used to load a serialized Campaign object
+	 * Need to work out how this is done (later)
+	 */
+	public void loadCampaign(Campaign c){
+		campaign =c;
+		ally=campaign.allies;
+		if (battlemode){
+			toggleActive();			
+		}
+	}
+	/**
 	 * Uses the 10 empty string array to maintain the size of the box while blanking it
 	 * Doesn't work as planned
 	 */

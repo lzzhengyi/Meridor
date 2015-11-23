@@ -1,9 +1,14 @@
 package meridor;
+import java.io.Serializable;
 import java.util.Random;
 import static meridor.MConst.*;
 
 
-public class MeriPet {
+public class MeriPet implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	final static int []STATCAPS={18,18,14};
 	final static int []STATCAPS2={21,19,14};
 	final static int[] CAMPAIGNS[]={STATCAPS,STATCAPS2};
@@ -589,7 +594,11 @@ public class MeriPet {
 			stats=nstats;
 		}
 	}
-	private class Species {
+	private class Species implements Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		/*
 		 * contains the race wide attributes of each neopet
 		 * Moves per turn

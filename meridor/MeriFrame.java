@@ -67,6 +67,7 @@ public class MeriFrame extends JFrame implements ActionListener {
 					}
 				} 
 				catch(IOException ex){
+					ex.printStackTrace();
 					System.err.println("File Save error!");
 				} 
 			}
@@ -80,8 +81,9 @@ public class MeriFrame extends JFrame implements ActionListener {
 					ObjectInput input=new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)));
 					//deserialize in
 					try {
-						mpanel.campaign=(Campaign)input.readObject();
-						mpanel.startNewCampaign();
+						Campaign loaded=(Campaign)input.readObject();
+						System.out.println("Successfully loadd campaign");
+						mpanel.loadCampaign(loaded);;
 					}finally {
 						input.close();
 					}

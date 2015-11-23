@@ -188,7 +188,11 @@ public class Campaign implements Serializable {
 	
 	
 	
-	private class Scenario {
+	private class Scenario implements Serializable{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		private String name;
 		private int treasureID, potionID;
 		public int[] itemIDList;
