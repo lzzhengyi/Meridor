@@ -176,6 +176,28 @@ public class MeriPet implements Serializable {
 		stats=other.stats;
 	}
 	/**
+	 * This constructor returns a new meripet that duplicates the original
+	 */
+	public MeriPet (MeriPet other){
+		species=SPEC[other.getSpeciesID()];
+		name=other.name;
+
+		saves=other.saves+0;
+		weapon=other.weapon+0;
+		armor=other.weapon+0;
+		dmg=0;
+		moves=0;
+		tele=0;
+		
+		setLocation(other.getLocation());
+		promoted=other.promoted && true;
+		movesealed=false;
+		healsealed=false;
+		telesealed=false;
+		
+		stats=other.stats.clone();
+	}
+	/**
 	 * The passed int is the campaignID; reference it for limits on stats if rank up
 	 * Only one promotion per mission; ranking up tells a pet that it has been promoted,
 	 * which needs to be reset

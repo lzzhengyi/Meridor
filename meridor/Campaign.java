@@ -160,6 +160,17 @@ public class Campaign implements Serializable {
 		allies=nallies;
 	}
 	/**
+	 * return a clone of the current list so that it can be altered
+	 * without altering the instanced meripets active in the current battle
+	 */
+	public ArrayList<MeriPet> getAllies(){
+		ArrayList<MeriPet> nallies=new ArrayList<MeriPet>();
+		for (int i=0;i<allies.size();i++){
+			nallies.add(new MeriPet(allies.get(i)));
+		}
+		return nallies;
+	}
+	/**
 	 * Return an arraylist with battle ready opponents based on the current scenario
 	 */
 	public ArrayList<MeriPet> generateFoes(){

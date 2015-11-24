@@ -139,7 +139,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 	 */
 	public void startNewCampaign(){
 		campaign=new Campaign();
-		ally=campaign.allies;
+		ally=campaign.getAllies();
 		toggleActive();
 	}
 	/**
@@ -148,7 +148,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 	 */
 	public void loadCampaign(Campaign c){
 		campaign =c;
-		ally=campaign.allies;
+		ally=campaign.getAllies();
 		if (battlemode){
 			toggleActive();			
 		}
