@@ -184,7 +184,7 @@ public class MeriPet implements Serializable {
 
 		saves=other.saves+0;
 		weapon=other.weapon+0;
-		armor=other.weapon+0;
+		armor=other.armor+0;
 		dmg=0;
 		moves=0;
 		tele=0;

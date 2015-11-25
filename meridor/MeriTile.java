@@ -11,13 +11,12 @@ import static meridor.MConst.*;
 import javax.imageio.ImageIO;
 
 public class MeriTile {
-	
+	final static int TILESIZE=40;
 	//need an additional ruined village tile
 	//potentially three other item types:
 	//equips, potions, treasures, and pets
 	//I think I will just import all images as terrain here
 	//and give each object a reference to their image's id
-	final static int TILESIZE=38;
 	
 	public int tileID;
 	public int terrain;
@@ -59,23 +58,25 @@ public class MeriTile {
 		g.setColor(Color.red);
 		g.fillRect(x, y, TILESIZE, TILESIZE);
 	}
-	public void draw(Graphics g){		
+	public void draw(Graphics g){
+		/* Despite obvious redundancy,
+		 * the following have to be written as is due to int rounding
+		 * could be refactored to avoid this
+		 */
+		//set the size of the inner square
+		float innerdim=(TILESIZE-BattleMap.IMGDIM)/2;
+		
 		if (tileGraphicMap.containsKey(terrain)){
 			if (isTreasure(terrain)){
-				g.drawImage(tileGraphicMap.get(terrain).getSubimage(5, 5, 38, 38), 
+				g.drawImage(tileGraphicMap.get(terrain).getSubimage((50-TILESIZE)/2, 0, TILESIZE, TILESIZE), 
 						x, y, null);
 			} else{
-				g.drawImage(tileGraphicMap.get(terrain), x+4, y+4, null);
+				g.drawImage(tileGraphicMap.get(terrain), x+(int)innerdim, y+(int)innerdim, null);
 			}
-
-		} else {
-			g.setColor(Color.white);
-			g.fillRect(x, y, TILESIZE, TILESIZE);
-//			g.drawImage(tileGraphicMap.get(MConst.random.nextInt(20)+30), x+4, y+4, null);
 		}
-		g.setColor(Color.gray);
-		if (!isTreasure(terrain))
-			g.drawRect(x+3, y+3, TILESIZE-7, TILESIZE-7);
+		g.setColor(Color.darkGray);
+		if (!isTreasure(terrain))			
+			g.drawRect(x+(int)innerdim, y+(int)innerdim, BattleMap.IMGDIM, BattleMap.IMGDIM);
 		g.drawRect(x, y, TILESIZE, TILESIZE);
 	}
 }

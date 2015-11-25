@@ -19,33 +19,26 @@ import java.util.Random;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
-
 import static meridor.MConst.*;
 
-//even though this class is called battlemap
-//I think I will use it as the gamestate
 public class BattleMap extends JPanel implements ActionListener,MouseListener,MouseMotionListener{
 
 	final static int MAPDIM=10; //10 by 10 squares
 	final static int IMGDIM=30; //30 by 30 pixels
-	final static int IMGMARGIN=5; //5 pixels to display status
-	final static int TILEDIM=IMGDIM+IMGMARGIN+2; //total size of cells
-	//BufferedImage buzz;
+	final static int TILEDIM=MeriTile.TILESIZE-1; //total size of cells
 	private int [] mouseLocation={0,0};
 	public MeriTile [][] tilemap;
 	private MeriPanel parent;
 	
 	//level is needed to restrict spawned items and enemies
-	public BattleMap (int level, MeriPanel p){
-		setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-		
+	public BattleMap (int level, MeriPanel p){		
 		parent=p;
 
 		genBlankMap();
 		
 		addMouseListener(this);
 		addMouseMotionListener(this);
-		setPreferredSize(new Dimension(getPaneSize()+10,getPaneSize()+10));
+		setPreferredSize(new Dimension(getPaneSize()+2,getPaneSize()+2));
 	}
 	/**
 	 * Generates a blank map for display purposes
@@ -295,6 +288,39 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 		return results;
 	}
 	/**
+	 * returns 3 below only
+	 * emptylist means bottom row
+	 * Direction is used to determine preference to left or right
+	 */
+	public ArrayList <MeriTile> getAdjBelow (int x, int y, int direction){
+		ArrayList <MeriTile> results=new ArrayList<MeriTile>();
+		if (y<MAPDIM-1){
+			//top left and below
+			ArrayList<MeriTile>left=new ArrayList<MeriTile>();
+			ArrayList<MeriTile>right=new ArrayList<MeriTile>();
+			if (x>0){
+				left.add(tilemap[x-1][y+1]);
+			}
+			if (x<MAPDIM-1){
+				right.add(tilemap[x+1][y+1]);
+			}
+			if (direction<0){
+				//add left first
+				results.addAll(left);
+				//bottom
+				results.add(tilemap[x][y+1]);
+				results.addAll(right);
+			} else {
+				//add right first
+				results.addAll(right);
+				//bottom
+				results.add(tilemap[x][y+1]);
+				results.addAll(left);
+			}
+		}
+		return results;
+	}
+	/**
 	 * returns 3 above only
 	 * empty list means top row
 	 */
@@ -497,7 +523,7 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 	}
 	public void paintComponent (Graphics g){
 		super.paintComponent(g);
-		setSize(getPaneSize(),getPaneSize());
+		this.setBackground(Color.white);
 		for (int i=0;i<MAPDIM;i++){
 			for (int j=0;j<MAPDIM;j++){
 				if (isAllyPetTerrain(tilemap[i][j].terrain)){
@@ -530,7 +556,6 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 	}
 	public void actionPerformed(ActionEvent arg0) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	public void mouseClicked(MouseEvent e) {
@@ -740,7 +765,7 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 			boolean found=false;
 			for (int i=0;i<parent.getPetLocations().size();i++){
 				if (Arrays.equals(parent.getPetLocations().get(i).getLocation(),new int[]{xc,yc})){
-					setToolTipText(parent.getPetLocations().get(i).name+" HP:"+parent.getPetLocations().get(i).getDmgNHealth());
+					setToolTipText(parent.getPetLocations().get(i).name+" (HP:"+parent.getPetLocations().get(i).getDmgNHealth()+")");
 					found=true;
 					break;
 				}

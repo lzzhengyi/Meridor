@@ -3,9 +3,11 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.*;
 
 import javax.swing.*;
+import javax.swing.UIManager.LookAndFeelInfo;
 
 
 public class MeriFrame extends JFrame implements ActionListener {
@@ -13,30 +15,64 @@ public class MeriFrame extends JFrame implements ActionListener {
 	public MeriPanel mpanel;
 	JMenu menu;
 	JMenuBar mbar;
-	JMenuItem mitem,save,load,newcampaign;
+	JMenuItem mitem,save,load,newcampaign,quit;
 	final JFileChooser fc=new JFileChooser();
 	
 	public MeriFrame (){
 		MConst.loadImages();
 		MConst.initItems();
+
+		//		try { 
+		//	    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		//	} catch (Exception e) {
+		//	    e.printStackTrace();
+		//	}
+		try {
+			for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+				if ("Nimbus".equals(info.getName())) {
+					UIManager.setLookAndFeel(info.getClassName());
+					break;
+				}
+			}
+		} catch (UnsupportedLookAndFeelException e) {
+			// handle exception
+			System.out.println("1");
+		} catch (ClassNotFoundException e) {
+			// handle exception
+			System.out.println("2");
+		} catch (InstantiationException e) {
+			// handle exception
+			System.out.println("3");
+		} catch (IllegalAccessException e) {
+			// handle exception
+			System.out.println("4");
+		}
 		
 		this.setTitle("Defense of Meridor Alpha");
 		mpanel=new MeriPanel();
 		mbar=new JMenuBar();
 		
 		menu=new JMenu("File");
+		menu.setMnemonic(KeyEvent.VK_F);
 		newcampaign=new JMenuItem("New");
 		newcampaign.addActionListener(this);
+		newcampaign.setMnemonic(KeyEvent.VK_N);
 		save=new JMenuItem("Save");
 		save.addActionListener(this);
+		save.setMnemonic(KeyEvent.VK_S);
 		load=new JMenuItem("Load");
 		load.addActionListener(this);
+		load.setMnemonic(KeyEvent.VK_L);
 		mitem=new JMenuItem("Toggle displays");
 		mitem.addActionListener(this);
+		quit=new JMenuItem("Quit");
+		mitem.addActionListener(this);
+		quit.setMnemonic(KeyEvent.VK_Q);
 		menu.add(newcampaign);
 		menu.add(save);
 		menu.add(load);
-		menu.add(mitem);
+		menu.add(quit);
+		//menu.add(mitem);
 		
 		mbar.add(menu);
 
@@ -45,6 +81,8 @@ public class MeriFrame extends JFrame implements ActionListener {
 		setJMenuBar(mbar);
 		setVisible(true);
 		pack();
+		
+
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -95,6 +133,9 @@ public class MeriFrame extends JFrame implements ActionListener {
 					e1.printStackTrace();
 				}
 			}
+		}
+		else if (e.getSource()==quit){
+//			this.dispose();
 		}
 		else if(e.getSource()==mitem){
 			mpanel.toggleActive();

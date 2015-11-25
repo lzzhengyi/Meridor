@@ -1,5 +1,6 @@
 package meridor;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -14,6 +15,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 import javax.swing.*;
+import javax.swing.border.EtchedBorder;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
 public class MeriPanel extends JPanel implements MouseListener{
@@ -51,6 +55,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 		movesLeft=MAX_MOVES;
 		villagesLeft=MAX_VILLAGES;
 		selected=null;
+		campaign=null;
 
 		ally=new ArrayList<MeriPet>();
 		foe=new ArrayList<MeriPet>();
@@ -140,7 +145,12 @@ public class MeriPanel extends JPanel implements MouseListener{
 	public void startNewCampaign(){
 		campaign=new Campaign();
 		ally=campaign.getAllies();
+		if (battlemode){
+			toggleActive();
+		}
 		toggleActive();
+		toggleActive();
+		sp.updateStatData();
 	}
 	/**
 	 * Used to load a serialized Campaign object
@@ -149,9 +159,13 @@ public class MeriPanel extends JPanel implements MouseListener{
 	public void loadCampaign(Campaign c){
 		campaign =c;
 		ally=campaign.getAllies();
+//		System.out.println(ally.size());
 		if (battlemode){
-			toggleActive();			
+			toggleActive();
 		}
+		toggleActive();
+		toggleActive();
+		sp.updateStatData();
 	}
 	/**
 	 * Uses the 10 empty string array to maintain the size of the box while blanking it
@@ -450,9 +464,9 @@ public class MeriPanel extends JPanel implements MouseListener{
 								//find nearest column with village and move in that direction
 								int direction=bm.getNearestColumnMultiplier(chosen.getLocation()[0]);
 								if (direction==1 || direction==-1){
-									ArrayList<int[]>path=bm.findOneTilePath(chosen.getLocation(), new int[]{chosen.getLocation()[0]+direction*2,chosen.getLocation()[1]});
+									ArrayList<MeriTile>path=bm.getAdjBelow(chosen.getLocation()[0],chosen.getLocation()[1],direction);
 									if (path.size()>0){
-										bm.movePet(chosen, path.get(0));								
+										bm.movePet(chosen, new int[]{path.get(0).getGridx(),path.get(0).getGridy()});								
 									}
 								}
 							}
@@ -500,6 +514,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 	 */
 	public void resolveGame(){
 		toggleActive();
+		campaign.allies=ally;
 		campaign.advance();
 		if (campaign.currentBattle==0){
 			for (int i=0;i<ally.size();i++){
@@ -599,6 +614,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 		};
 
 		private UnitDisplay(){
+			setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 			updateAllyData();
 			updateFoeData();
 			JScrollPane jspA=new JScrollPane(allytable);
@@ -638,9 +654,11 @@ public class MeriPanel extends JPanel implements MouseListener{
 			allytable=new JTable(sdtm);
 			allytable.setRowHeight(30);
 			allytable.getColumnModel().getColumn(0).setPreferredWidth(34);
-			allytable.getColumnModel().getColumn(1).setPreferredWidth(220);
-			allytable.getColumnModel().getColumn(4).setPreferredWidth(34);
-			allytable.getColumnModel().getColumn(6).setPreferredWidth(34);
+			allytable.getColumnModel().getColumn(1).setPreferredWidth(190);
+			allytable.getColumnModel().getColumn(4).setPreferredWidth(38);
+			allytable.getColumnModel().getColumn(6).setPreferredWidth(38);
+			allytable.getTableHeader().setReorderingAllowed(false);
+			allytable.getTableHeader().setResizingAllowed(false);
 			allytable.setEnabled(false); //not ideal, fix later
 		}
 		/**
@@ -669,24 +687,14 @@ public class MeriPanel extends JPanel implements MouseListener{
 			foetable=new JTable(sdtm);
 			foetable.setRowHeight(30);
 			foetable.getColumnModel().getColumn(0).setPreferredWidth(34);
-			foetable.getColumnModel().getColumn(1).setPreferredWidth(220);
-			foetable.getColumnModel().getColumn(4).setPreferredWidth(34);
-			foetable.getColumnModel().getColumn(6).setPreferredWidth(34);
+			foetable.getColumnModel().getColumn(1).setPreferredWidth(190);
+			foetable.getColumnModel().getColumn(4).setPreferredWidth(38);
+			foetable.getColumnModel().getColumn(6).setPreferredWidth(38);
+			foetable.getTableHeader().setReorderingAllowed(false);
+			foetable.getTableHeader().setResizingAllowed(false);
 			foetable.setEnabled(false);
 		}
-		/**
-		 * Doesn't work, I need to figure out how to incorporate this into tablemodel
-		 */
-		public void setEditableFalse(){
-			DefaultTableModel tablemodel=new DefaultTableModel(){
 
-				@Override
-				public boolean isCellEditable(int row, int column){
-					return column==1;
-				}
-			};
-			allytable.setModel(tablemodel);
-		}
 		public void paintComponent(Graphics g){
 			super.paintComponent(g);
 			updateAllyData();
@@ -700,18 +708,19 @@ public class MeriPanel extends JPanel implements MouseListener{
 	 * take info in the ally array and split it out
 	 * two tables, one for name/select, one for stats
 	 */
-	private class SelectParty extends JPanel implements ActionListener {
+	private class SelectParty extends JPanel implements ActionListener, TableModelListener {
 
 		final private String[] SELECTCOLS={
 				"Name","Selected"	
 		};
 		final private String[] STATCOLS={
-				"","Rank","Health","Attack","","Defence","","Saves"	
+				"Name","Selected","","Rank","Health","Attack","","Defence","","Saves"	
 		};
 
 		JButton confirmteam;
 		JTable selector,statdisplayer;
 		Object[][]allyname;
+		boolean[]petchosen; //implementing this the HARD WAY: keeping a separate array to store selected status
 
 		private SelectParty (){
 			JPanel toppanel=new JPanel();
@@ -720,11 +729,11 @@ public class MeriPanel extends JPanel implements MouseListener{
 
 			updateStatData();
 			JScrollPane jspA=new JScrollPane(selector);
-			JScrollPane jspF=new JScrollPane(statdisplayer);
+//			JScrollPane jspF=new JScrollPane(statdisplayer);
 			toppanel.add(jspA);
-			toppanel.add(jspF);
+//			toppanel.add(jspF);
 			selector.setFillsViewportHeight(true);
-			statdisplayer.setFillsViewportHeight(true);
+//			statdisplayer.setFillsViewportHeight(true);
 
 			toppanel.setLayout(new BoxLayout(toppanel, BoxLayout.X_AXIS));
 
@@ -736,7 +745,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 			add (confirmteam);
 
 			setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-			setPreferredSize(new Dimension(800,500));
+			setPreferredSize(new Dimension(900,500));
 		}
 		/**
 		 * Updates every tick and on init
@@ -744,76 +753,88 @@ public class MeriPanel extends JPanel implements MouseListener{
 		 */
 		public void updateStatData(){
 			allyname=new Object[ally.size()][];
-			Object[][]allystats=new Object[ally.size()][];
+			petchosen=new boolean[ally.size()];
+//			Object[][]allystats=new Object[ally.size()][];
 			for (int i=0;i<ally.size();i++){
-				Object[]mname=new Object[2];
+				Object[]mname=new Object[10];
 				mname[0]=ally.get(i).name;
-				mname[1]=new Boolean(true);
-				Object[]mstats=new Object[8];
-				mstats[0]=MConst.imageIconMap.get(ally.get(i).getSpeciesID());
-				mstats[1]=ally.get(i).getRank();
-				mstats[2]=ally.get(i).getDmgNHealth();
-				mstats[3]=ally.get(i).getAttackString();
-				mstats[4]=MConst.imageIconMap.get(ally.get(i).weapon);
-				mstats[5]=ally.get(i).getDefenseString();
-				mstats[6]=MConst.imageIconMap.get(ally.get(i).armor);
-				mstats[7]=ally.get(i).getSavesString();
+				mname[1]=petchosen[i]=new Boolean(true);
+				mname[2]=MConst.imageIconMap.get(ally.get(i).getSpeciesID());
+				mname[3]=ally.get(i).getRank();
+				mname[4]=ally.get(i).getDmgNHealth();
+				mname[5]=ally.get(i).getAttackString();
+				mname[6]=MConst.imageIconMap.get(ally.get(i).weapon);
+				mname[7]=ally.get(i).getDefenseString();
+				mname[8]=MConst.imageIconMap.get(ally.get(i).armor);
+				mname[9]=ally.get(i).getSavesString();
 				allyname[i]=mname;
-				allystats[i]=mstats;
 			}
 
-			DefaultTableModel tablemodel=new DefaultTableModel(){
-				private String[] columnNames=SELECTCOLS;
-				private Object[][]data=allyname;
+//			DefaultTableModel tablemodel=new DefaultTableModel(){
+//				private String[] columnNames=SELECTCOLS;
+//				private Object[][]data=allyname;
+//
+//				public int getColumnCount(){
+//					if (columnNames !=null)
+//						return columnNames.length;
+//					else
+//						return 0;
+//				}
+//				public int getRowCount(){
+//					if (data !=null)
+//						return data.length;
+//					else
+//						return 0;
+//				}
+//				public Object getValueAt(int row, int col){
+//					try{
+//						return data[row][col];						
+//					} catch (Exception e){
+//						System.out.println("GetvalueError: datasize("+data.length+
+//								") row"+row+",col"+col);
+//						return null;
+//					}
+//				}
+//				public void setValueAt (Object value, int row, int col){
+//					data[row][col]=value;
+//					allyname[row][col]=value;
+//					fireTableCellUpdated(row,col);
+////					System.out.println("updated+"+(boolean)getValueAt(row,col));
+//				}
+//
+//				public Class getColumnClass(int c){
+//					return getValueAt(0,c).getClass();
+//				}
+//			};
 
-				public int getColumnCount(){
-					if (columnNames !=null)
-						return columnNames.length;
-					else
-						return 0;
-				}
-				public int getRowCount(){
-					if (data !=null)
-						return data.length;
-					else
-						return 0;
-				}
-				public Object getValueAt(int row, int col){
-					try{
-						return data[row][col];						
-					} catch (Exception e){
-						System.out.println("GetvalueError: datasize("+data.length+
-								") row"+row+",col"+col);
-						return null;
-					}
-				}
-				public void setValueAt (Object value, int row, int col){
-					data[row][col]=value;
-					allyname[row][col]=value;
-					fireTableCellUpdated(row,col);
-				}
-
+			DefaultTableModel sdtm=new DefaultTableModel(allyname,STATCOLS){
 				public Class getColumnClass(int c){
 					return getValueAt(0,c).getClass();
 				}
-
-				//				@Override
-				//				public boolean isCellEditable(int row, int column){
-				//					return column==1;
-				//				}
-			};
-
-			selector = new JTable(tablemodel);
-
-			DefaultTableModel sdtm=new DefaultTableModel(allystats,STATCOLS){
-				public Class getColumnClass(int c){
-					return getValueAt(0,c).getClass();
+				@Override
+				public boolean isCellEditable(int row, int column){
+					return column<=1;
 				}
+//				public void setValueAt (Object value, int row, int col){
+//					allyname[row][col]=value;
+//					this.
+//					fireTableCellUpdated(row,col);
+//					System.out.println("updated+"+(boolean)getValueAt(row,col));
+//				}
 			};
-			statdisplayer=new JTable(sdtm);
-			statdisplayer.setRowHeight(30);
-			statdisplayer.getColumnModel().getColumn(0).setPreferredWidth(120);
-			statdisplayer.setEnabled(false); //not ideal, fix later
+			sdtm.addTableModelListener(this);
+			selector = new JTable(sdtm);
+//			statdisplayer=new JTable(sdtm);
+			selector.setRowHeight(30);
+			selector.getColumnModel().getColumn(0).setPreferredWidth(120);
+			selector.getColumnModel().getColumn(2).setPreferredWidth(34);
+			selector.getColumnModel().getColumn(6).setPreferredWidth(34);
+			selector.getColumnModel().getColumn(8).setPreferredWidth(34);
+			selector.getTableHeader().setReorderingAllowed(false);
+			selector.getTableHeader().setResizingAllowed(false);
+//			statdisplayer.setEnabled(false); //not ideal, fix later
+			revalidate();
+			repaint();
 		}
 		/**
 		 * Checks to make sure only 5 allies are selected (true)
@@ -821,15 +842,16 @@ public class MeriPanel extends JPanel implements MouseListener{
 		public boolean isPartyValid (){
 			int count=0;
 			for (int i=0;i<allyname.length;i++){
-				if ((boolean) allyname[i][1]){
+				if (petchosen[i]){
 					count++;
 				}
 			}
+			System.out.println(count);
 			return count==5;
 		}
 		public void paintComponent(Graphics g){
 			super.paintComponent(g);
-			updateStatData();
+//			updateStatData();
 		}
 		/*
 		 * (non-Javadoc)
@@ -846,8 +868,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 					if (choice==JOptionPane.YES_OPTION){
 						ArrayList<MeriPet> ally2=new ArrayList<MeriPet>();
 						for (int i=0;i<allyname.length;i++){
-							if ((boolean) allyname[i][1]){
-								ally.get(i).name=(String) allyname[i][0];
+							if (petchosen[i]){
 								ally2.add(ally.get(i));
 							}
 						}
@@ -859,6 +880,18 @@ public class MeriPanel extends JPanel implements MouseListener{
 			}
 
 		}
+		@Override
+		public void tableChanged(TableModelEvent e) {
+			int row=e.getFirstRow();
+			int col=e.getColumn();
+			if (col==1){
+				petchosen[row]=(boolean) ((DefaultTableModel)e.getSource()).getValueAt(row, col);
+			} else if (col==0){
+				ally.get(row).name=(String)((DefaultTableModel)e.getSource()).getValueAt(row, col);
+				campaign.allies.get(row).name=(String)((DefaultTableModel)e.getSource()).getValueAt(row, col);
+			}
+			System.out.println(petchosen[row]);
+		}
 	}
 	/**
 	 * Displays the results of the latest action
@@ -868,12 +901,13 @@ public class MeriPanel extends JPanel implements MouseListener{
 		JTextArea text;
 
 		private BattleLog (){
+			setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 			setLayout(new BorderLayout());
 			text=new JTextArea("");
 			text.setEditable(false);
 			JScrollPane jsp=new JScrollPane(text);
 
-			text.setPreferredSize(new Dimension(500,100));
+			text.setPreferredSize(new Dimension(500,120));
 			jsp.setPreferredSize(text.getPreferredSize());
 			add (jsp,BorderLayout.CENTER);
 		}
@@ -902,7 +936,8 @@ public class MeriPanel extends JPanel implements MouseListener{
 		 */
 		private InfoDisplay(){
 			setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
+			setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+			
 			JLabel iteminfolabel=new JLabel("Click for item info:");
 			JLabel maxmoveslabel=new JLabel("Maximum Moves Total/Turn:"+MAX_MOVES);
 			JLabel petmaxlabel=new JLabel("Maximum Moves Total/Pet:");
@@ -912,7 +947,8 @@ public class MeriPanel extends JPanel implements MouseListener{
 			endturnbutton=new JButton("End Turn");
 			endturnbutton.setMnemonic(KeyEvent.VK_E);
 			deselectbutton=new JButton("Unselect Current Pet:");
-
+			deselectbutton.setMnemonic(KeyEvent.VK_U);
+			
 			endturnbutton.addActionListener(this);
 			deselectbutton.addActionListener(this);
 
@@ -957,7 +993,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 		}
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if (e.getSource()==endturnbutton && !checkGameLost()){
+			if (e.getSource()==endturnbutton && campaign!=null && !checkGameLost()){
 				if (checkGameWon()){
 					resolveGame();
 				} else {
