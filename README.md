@@ -1,6 +1,19 @@
 # Meridor
 A Java application recreating an online strategy web browser game.
 
+To play: compile the src files into a .jar file.
+Make sure the image icons are in the same folder as the compiled, runnable .jar.
+
+Run the .jar, then start a new campaign!
+You can also save and load a campaign if you wish to put the game down and play it later.
+
+11/26 Update:
+The campaign mode has been fully implemented for a while, but the campaign victory screen is a work in progress
+Items are fully implemented
+Enemy AI is fully implemented
+Terrain features are fully implemented
+The UI is currently considered complete, aside from item information screens
+
 11/18 Update:
 I didn't log most of the updates I made to this project over the last two weeks, which I belatedly realize I should have. I am documenting all currently implemented features for posterity.
 
