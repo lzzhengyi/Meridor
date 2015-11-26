@@ -9,9 +9,9 @@ You can also save and load a campaign if you wish to put the game down and play 
 
 11/26 Update:
 The campaign mode has been fully implemented for a while, but the campaign victory screen is a work in progress
-Items are fully implemented
-Enemy AI is fully implemented
-Terrain features are fully implemented
+
+Items, Enemy AI and Terrain features are fully implemented
+
 The UI is currently considered complete, aside from item information screens
 
 11/18 Update:
