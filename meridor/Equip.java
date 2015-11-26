@@ -79,7 +79,11 @@ public class Equip {
 	}
 	public String getDesc(){
 		if (desc ==null){
-			desc="";
+			if (equipDescMap.containsKey(waID)){
+				setDesc(equipDescMap.get(waID));
+			} else {
+				desc="";
+			}
 			return desc;
 		} else {
 			return desc;
@@ -138,6 +142,16 @@ public class Equip {
 			return sdef;
 		} else {
 			return def;
+		}
+	}
+	/**
+	 * Return the id of the first listed bonus species (the one that gains extra stats)
+	 */
+	public int getBonusSpecies(){
+		if (bonusSpecies.length>0){
+			return bonusSpecies[0];			
+		} else {
+			return -1;
 		}
 	}
 }

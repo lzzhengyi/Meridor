@@ -1,5 +1,6 @@
 package meridor;
 
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -13,13 +14,9 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 public class MConst {
+	final static int TILESIZE=40;
 	final static boolean WEAPON=true;
-	//considering converting to enums, but not yet
-	public enum TT {
-		BLANK,VILLAGE,MOUNTAIN,CRATER,
-		MOEHOG,SKEITH,TECHO,SCORCH,GRUNDO,
-		D_MOE,D_SKE,D_TEC,D_SCO,D_GRU,D_BUZ,D_GRA
-	};
+	
 	public enum DARKLORDS {D_BUZ,D_GRA};
 	private final static int noeffect=-1;
 	private final static int rangedatk=0;
@@ -83,9 +80,10 @@ public class MConst {
 	final static int WDEFL=48;
 	final static int DCOUN=49;
 	static Random random=new Random();
-	public static Map<Integer,BufferedImage>tileGraphicMap=null;
+	public static Map<Integer,Image>tileGraphicMap=null;
 	public static Map<Integer, ImageIcon>imageIconMap=null;
 	public static Map<Integer, Equip>equipMap=null;
+	public static Map<Integer, String>equipDescMap=null;
 	
 	private class Coord{
 		int x,y;
@@ -108,8 +106,8 @@ public class MConst {
 			equipMap.put(WHAMM, new Equip("Hammer",WHAMM,WEAPON,2,0,0));
 			equipMap.put(WBBAX, new Equip("Berserker Battleaxe",WBBAX,
 					WEAPON,!freeatk,freetele,
-					3,0,3,0,0,0,noeffect,
-					emptyset,emptyset));
+					3,0,5,0,0,0,noeffect,
+					new int[]{SKEITH},emptyset));
 			equipMap.put(WBOW_, new Equip("Bow",WBOW_,
 					WEAPON,!freeatk,!freetele,
 					2,0,4,0,0,0,rangedatk,
@@ -125,7 +123,7 @@ public class MConst {
 					new int[]{TECHO},emptyset));
 			equipMap.put(WHALB, new Equip("Halberd",WHALB,
 					WEAPON,freeatk,!freetele,
-					5,0,5,0,0,0,noeffect,
+					4,0,4,0,0,0,noeffect,
 					emptyset,emptyset));
 			equipMap.put(WDAXE, new Equip("Double Axe",WDAXE,
 					WEAPON,!freeatk,!freetele,
@@ -150,25 +148,25 @@ public class MConst {
 					new int[]{MOEHOG},emptyset));
 			equipMap.put(DINVI, new Equip("Cloak of Invisibility",DINVI,
 					!WEAPON,!freeatk,!freetele,
-					0,4,0,7,0,0,noeffect,
+					0,3,0,5,0,0,noeffect,
 					new int[]{GRUNDO},emptyset));
 			equipMap.put(DSHIE, new Equip("Shield",DSHIE,
 					!WEAPON,!freeatk,!freetele,
-					0,5,0,7,0,0,noeffect,
+					0,4,0,6,0,0,noeffect,
 					new int[]{TECHO},emptyset));
 			
 			equipMap.put(DLEAT, new Equip("Leather Armor",DLEAT,
 					!WEAPON,!freeatk,!freetele,
-					0,5,0,5,0,0,noeffect,
-					emptyset,new int[]{GRUNDO,SKEITH}));
+					0,3,0,5,0,0,noeffect,
+					new int[]{SCORCH},emptyset));
 			equipMap.put(DCHAI, new Equip("Chainmail",DCHAI,
 					!WEAPON,!freeatk,!freetele,
-					0,6,0,6,0,0,noeffect,
+					0,4,0,4,0,0,noeffect,
 					emptyset,emptyset));
 			equipMap.put(DPLAT, new Equip("Plate Armor",DPLAT,
 					!WEAPON,!freeatk,!freetele,
-					0,7,0,7,0,0,noeffect,
-					emptyset,new int[]{GRUNDO,SKEITH,SCORCH,TECHO}));
+					0,5,0,7,0,0,noeffect,
+					new int[]{MOEHOG},emptyset));
 			equipMap.put(WDEFL, new Equip("Sword of Deflection",WDEFL,
 					WEAPON,!freeatk,!freetele,
 					4,0,6,0,0,0,breaktele,
@@ -178,10 +176,34 @@ public class MConst {
 					0,3,0,5,0,0,breakheal,
 					new int[]{MOEHOG},emptyset));
 		}
+		
+		if (equipDescMap==null){
+			equipDescMap=new HashMap<Integer,String>();
+			equipDescMap.put(WMACE, "This weapon is often affectionately refered to as 'The Smasher', 'The Destroyer', 'The Crusher', 'The Evil Neopet Mincer'... well, there are too many names to list here, but you get the idea!");
+			equipDescMap.put(WBSWO, "This handy weapon was once a plough for tilling fields, but when dark times beset Meridell, it was forged into a Broadsword. Techos like these weapons very much indeed!");
+			equipDescMap.put(WHAMM, "Ideal for pets that like to smash things. You not only get to bash the invaders with it, you get to feel good doing it, too!");
+			equipDescMap.put(WBBAX, "Heavy weaponry only the strong dare brandish! When a Skeith has this Battleaxe along with teleportation power... whoa!!!");
+			equipDescMap.put(WBOW_, "Once a Scorchio gains the experience of a Warrior, he can shoot his bow from 2 spaces away!");
+			equipDescMap.put(SFORC, "Zap adjacent enemies with the power of the Magic Force Spell to inflict massive damage! In the hands of a Grundo, you can not only zap your enemies, but you can zap a fellow trooper from anywhere to heal them. (Requires both pieces to have an available move).");
+			equipDescMap.put(WDSWO, "This weapon has a very nice special ability: whenever it hits it is guaranteed to do at least six points of damage. (Unfortunately it is not guaranteed to hit...)");
+			equipDescMap.put(WHALB, "Touched with the Magic of Meridell, this item grants it's owner unlimited moves (Max 5)!");
+			equipDescMap.put(WDAXE, "Guaranteed to do at least 5 points of damage when it hits (is not guaranteed to hit).");
+			equipDescMap.put(SLIGH, "Zap Invaders with a lightning bolt! When used by Grundos, this powerful spell can attack Invaders from 2 spaces away! It can also heal multiple fellow fighters in the same column! To use the healing power, click a fellow fighter in the column you wish to target. (Costs 1 move per healing).");
+			equipDescMap.put(DTHUN, "The thunderous sounds from this staff will have your enemies trembling! Grundos know how to work these staffs the best. (As they do with all 'Magic' items!)");
+			equipDescMap.put(DTELE, "When a Skeith wears this Amulet, he can teleport to any unoccupied space in rows 3 through 10! WARNING : This is a Important weapon!!!");
+			equipDescMap.put(DHELM, "When a Moehog wears this helmet, it provides some extra protection to that skull he loves to fight with!");
+			equipDescMap.put(DINVI, "When a Grundo wears this cloak, he becomes invisib|e, making it nearly impossible to hit him! Many battles are won and lost depending on whether the Grundo has this item and the Magic Force Spell!");
+			equipDescMap.put(DSHIE, "Techos know how to put these shields to good use!");
+			equipDescMap.put(DLEAT, "The lightest armor, but still offering good protection! All Meridellians can wear it.");
+			equipDescMap.put(DCHAI, "Affords the best movement with the best protection! All Meridellians can wear it.");
+			equipDescMap.put(DPLAT, "The strongest armor, but a bit cumbersome. All Meridellians can wear it.");
+			equipDescMap.put(WDEFL, "Techos use this sword to deflect the enchantments cast upon Skeiths by the evil Invaders! Click on the Techo that carries this sword then click on the enchanted Skeith to free him!");
+			equipDescMap.put(DCOUN, "Moehogs can use the magical power of this helmet to deflect the enchantments cast upon Grundos by the evil Invaders! If a Grundo is enchanted, click on the Moehog that wears this helmet and then click on the enchanted Grundo to free him!");
+		}
 	}
 	public static void loadImages(){
 		if (tileGraphicMap ==null){
-			tileGraphicMap=new HashMap<Integer,BufferedImage>();
+			tileGraphicMap=new HashMap<Integer,Image>();
 			try {				
 				//terrain
 				tileGraphicMap.put(VILLAGE, ImageIO.read(new File("vlg.jpg")));
@@ -207,16 +229,16 @@ public class MConst {
 				tileGraphicMap.put(P_MEGA, ImageIO.read(new File("Mega_Potion.jpg")));
 				tileGraphicMap.put(P_WELL, ImageIO.read(new File("Potion_of_Well-Being.jpg")));
 				//treasure
-				tileGraphicMap.put(GOBLET, ImageIO.read(new File("Goblet.jpg")));
-				tileGraphicMap.put(GOLDIX, ImageIO.read(new File("Gold_Ixi.jpg")));
-				tileGraphicMap.put(URNABU, ImageIO.read(new File("Urn_of_Abundance.jpg")));
-				tileGraphicMap.put(ANCBOO, ImageIO.read(new File("Ancient_Book.jpg")));
-				tileGraphicMap.put(CROWN_, ImageIO.read(new File("Crown.jpg")));
-				tileGraphicMap.put(ROYPLA, ImageIO.read(new File("Royal_Plate.jpg")));
-				tileGraphicMap.put(ROYTAP, ImageIO.read(new File("Royal_Tapestry.jpg")));
-				tileGraphicMap.put(TRECHE, ImageIO.read(new File("Treasure_Chest.jpg")));
-				tileGraphicMap.put(VASPLE, ImageIO.read(new File("Vase_of_Plenty.jpg")));
-				tileGraphicMap.put(VICORB, ImageIO.read(new File("Orb.jpg")));
+				tileGraphicMap.put(GOBLET, ImageIO.read(new File("Goblet.jpg")).getScaledInstance(TILESIZE, TILESIZE, Image.SCALE_AREA_AVERAGING));
+				tileGraphicMap.put(GOLDIX, ImageIO.read(new File("Gold_Ixi.jpg")).getScaledInstance(TILESIZE, TILESIZE, Image.SCALE_AREA_AVERAGING));
+				tileGraphicMap.put(URNABU, ImageIO.read(new File("Urn_of_Abundance.jpg")).getScaledInstance(TILESIZE, TILESIZE, Image.SCALE_AREA_AVERAGING));
+				tileGraphicMap.put(ANCBOO, ImageIO.read(new File("Ancient_Book.jpg")).getScaledInstance(TILESIZE, TILESIZE, Image.SCALE_AREA_AVERAGING));
+				tileGraphicMap.put(CROWN_, ImageIO.read(new File("Crown.jpg")).getScaledInstance(TILESIZE, TILESIZE, Image.SCALE_AREA_AVERAGING));
+				tileGraphicMap.put(ROYPLA, ImageIO.read(new File("Royal_Plate.jpg")).getScaledInstance(TILESIZE, TILESIZE, Image.SCALE_AREA_AVERAGING));
+				tileGraphicMap.put(ROYTAP, ImageIO.read(new File("Royal_Tapestry.jpg")).getScaledInstance(TILESIZE, TILESIZE, Image.SCALE_AREA_AVERAGING));
+				tileGraphicMap.put(TRECHE, ImageIO.read(new File("Treasure_Chest.jpg")).getScaledInstance(TILESIZE, TILESIZE, Image.SCALE_AREA_AVERAGING));
+				tileGraphicMap.put(VASPLE, ImageIO.read(new File("Vase_of_Plenty.jpg")).getScaledInstance(TILESIZE, TILESIZE, Image.SCALE_AREA_AVERAGING));
+				tileGraphicMap.put(VICORB, ImageIO.read(new File("Orb.jpg")).getScaledInstance(TILESIZE, TILESIZE, Image.SCALE_AREA_AVERAGING));
 				
 				tileGraphicMap.put(WMACE, ImageIO.read(new File("Mace.jpg")));
 				tileGraphicMap.put(WBSWO, ImageIO.read(new File("Broadsword.jpg")));
@@ -313,7 +335,11 @@ public class MConst {
 		return iid;
 	}
 	public static String getEquipToolTipStats(int id){
-		return equipMap.get(id).getToolTipStats();
+		if (equipMap.containsKey(id)){
+			return equipMap.get(id).getToolTipStats();	
+		} else {
+			return null;
+		}
 	}
 	/**
 	 * Checks the passed equipmentID to see if it has the heal ability set

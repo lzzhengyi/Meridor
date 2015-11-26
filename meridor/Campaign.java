@@ -20,6 +20,7 @@ public class Campaign implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	private static int MAX_FOE_ARMY=8;
 	Scenario M0=new Scenario("Mission 1",GOBLET,P_HEAL,new int[]{WMACE,WBSWO,DTHUN,DTHUN},new int[][]{
 		new int[]{D_MOE,8,12,5,9,6,12}
 	},5);
@@ -31,28 +32,28 @@ public class Campaign implements Serializable {
 	},6);
 	Scenario M3=new Scenario("Mission 4",ANCBOO,P_WELL,new int[]{SFORC,WBOW_,DTELE,DINVI},new int[][]{
 		new int[]{D_SCO,14,18,12,16,12,16}
-	},6);
+	},7);
 	Scenario M4=new Scenario("Mission 5",CROWN_,P_FORT,new int[]{SFORC,WBBAX,DHELM,DSHIE},new int[][]{
 		new int[]{D_GRU,15,19,13,16,15,17}
-	},6);
+	},8);
 	Scenario M5=new Scenario("Mission 6",ROYPLA,P_MEGA,new int[]{WDEFL,WDEFL,DCOUN,DCOUN},new int[][]{
 		new int[]{D_BUZ,21,21,21,21,21,21},
 		new int[]{D_BUZ,21,21,21,21,21,21},
 		new int[]{D_MOE,17,17,17,17,17,17}
-	},6,2);
+	},8,2);
 	Scenario M6=new Scenario("Mission 7",ROYTAP,P_WELL,new int[]{WDSWO,WHALB,DCHAI,DLEAT},new int[][]{
 		new int[]{D_BUZ,29,29,25,25,25,25},
 		new int[]{D_BUZ,21,21,21,21,21,21},
 		new int[]{D_BUZ,21,21,21,21,21,21},
 		new int[]{D_TEC,18,18,18,18,18,18}
-	},6,2);
+	},8,2);
 	Scenario M7=new Scenario("Mission 8",TRECHE,P_FORT,new int[]{SLIGH,SLIGH,DPLAT,DCHAI},new int[][]{
 		new int[]{D_GRA,23,23,21,21,21,21},
 		new int[]{D_GRA,22,22,22,22,22,22},
 		new int[]{D_GRA,22,22,22,22,22,22},
 		new int[]{D_GRA,23,23,21,21,21,21},
 		new int[]{D_SKE,19,19,19,19,19,19}
-	},6,2);
+	},8,2);
 	Scenario M8=new Scenario("Mission 9",VASPLE,P_MEGA,new int[]{WDAXE,WDAXE,DTELE,DCHAI},new int[][]{
 		new int[]{D_GRA,29,29,26,26,26,26},
 		new int[]{D_GRA,22,22,22,22,22,22},
@@ -60,7 +61,7 @@ public class Campaign implements Serializable {
 		new int[]{D_GRA,22,22,22,22,22,22},
 		new int[]{D_GRA,22,22,22,22,22,22},
 		new int[]{D_SCO,20,20,20,20,20,20}
-	},6,2);
+	},8,2);
 	Scenario M9=new Scenario("Mission 10",VICORB,P_WELL,new int[]{WDAXE,SLIGH,DPLAT,DCHAI},new int[][]{
 		new int[]{D_BUZ,29,29,27,27,27,27},
 		new int[]{D_BUZ,21,21,21,21,21,21},
@@ -68,7 +69,16 @@ public class Campaign implements Serializable {
 		new int[]{D_GRA,22,22,22,22,22,22},
 		new int[]{D_GRA,29,29,27,27,27,27},
 		new int[]{D_GRU,23,23,23,23,23,23}
-	},6,2);
+	},8,2);
+	
+	Scenario V0=new Scenario("You have defended Meridor!",VICORB,P_WELL,new int[]{WDAXE,SLIGH,DPLAT,DCHAI},new int[][]{
+		new int[]{D_BUZ,29,29,27,27,27,27},
+		new int[]{D_BUZ,21,21,21,21,21,21},
+		new int[]{D_GRA,22,22,22,22,22,22},
+		new int[]{D_GRA,22,22,22,22,22,22},
+		new int[]{D_GRA,29,29,27,27,27,27},
+		new int[]{D_GRU,23,23,23,23,23,23}
+	},8,2);
 	
 	public int currentBattle; //3 battles per scenario
 	public int currentScenario; //ten scenarios?
@@ -131,19 +141,30 @@ public class Campaign implements Serializable {
 		}
 	}
 	/**
+	 * If the scenario is valid, return the scenario
+	 * But if it is not, I assume the player has won, hence the victory screen
+	 */
+	public Scenario getCurrentScenario(){
+		if (currentScenario<scenarios.size()){
+			return scenarios.get(currentScenario);
+		} else {
+			return V0;
+		}
+	}
+	/**
 	 * returns the list appropriate to the current scenario (4 ints)
 	 */
 	public int[] getItemList(){
-		return scenarios.get(currentScenario).itemIDList;
+		return getCurrentScenario().itemIDList;
 	}
 	public int getTreasure(){
-		return scenarios.get(currentScenario).treasureID;
+		return getCurrentScenario().treasureID;
 	}
 	public int getPotion(){
-		return scenarios.get(currentScenario).potionID;
+		return getCurrentScenario().potionID;
 	}
 	public int getWave(){
-		return scenarios.get(currentScenario).wave;
+		return getCurrentScenario().wave;
 	}
 	public String getMissionNScenarioNames(){
 		return "Mission "+(currentScenario+1)+": Battle "+(currentBattle+1);
@@ -175,17 +196,17 @@ public class Campaign implements Serializable {
 	 */
 	public ArrayList<MeriPet> generateFoes(){
 		ArrayList<MeriPet> foearmy=new ArrayList<MeriPet>();
-		for (int i=0;i<scenarios.get(currentScenario).armysize+currentBattle;i++){
-			int pid=Math.min(i, scenarios.get(currentScenario).foes.length-1);
+		for (int i=0;i<Math.min(MAX_FOE_ARMY, getCurrentScenario().armysize+currentBattle);i++){
+			int pid=Math.min(i, getCurrentScenario().foes.length-1);
 			String name="Invader "+(1+i);
 			//an inelegant way to check if the species of the invader is a dark lord
-			if (scenarios.get(currentScenario).foes[pid][0]==MConst.D_BUZ){
+			if (getCurrentScenario().foes[pid][0]==MConst.D_BUZ){
 				name="Dark Lord "+(1+i);
-			} else if (scenarios.get(currentScenario).foes[pid][0]==MConst.D_GRA) {
+			} else if (getCurrentScenario().foes[pid][0]==MConst.D_GRA) {
 				name="Dark Master "+(1+i);
 			}
 			foearmy.add(new MeriPet(name,
-					scenarios.get(currentScenario).foes[pid]));
+					getCurrentScenario().foes[pid]));
 		}
 		return foearmy;
 	}
@@ -208,7 +229,7 @@ public class Campaign implements Serializable {
 		private int treasureID, potionID;
 		public int[] itemIDList;
 		int[][] foes;
-		int armysize,wave;
+		int armysize,wave; //wave determines which level caps to use for stats
 		
 		private Scenario(String name,int treasure,int potion,int [] itemids, int[][] foes, int armysize){
 			this.name=name;

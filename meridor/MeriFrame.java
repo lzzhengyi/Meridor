@@ -12,11 +12,12 @@ import javax.swing.UIManager.LookAndFeelInfo;
 
 public class MeriFrame extends JFrame implements ActionListener {
 
-	public MeriPanel mpanel;
-	JMenu menu;
-	JMenuBar mbar;
-	JMenuItem mitem,save,load,newcampaign,quit;
-	final JFileChooser fc=new JFileChooser();
+	private String title="Defense of Meridor Alpha";
+	private MeriPanel mpanel;
+	private JMenu menu;
+	private JMenuBar mbar;
+	private JMenuItem mitem,save,load,newcampaign,quit;
+	private final JFileChooser fc=new JFileChooser();
 	
 	public MeriFrame (){
 		MConst.loadImages();
@@ -48,7 +49,6 @@ public class MeriFrame extends JFrame implements ActionListener {
 			System.out.println("4");
 		}
 		
-		this.setTitle("Defense of Meridor Alpha");
 		mpanel=new MeriPanel();
 		mbar=new JMenuBar();
 		
@@ -66,7 +66,7 @@ public class MeriFrame extends JFrame implements ActionListener {
 		mitem=new JMenuItem("Toggle displays");
 		mitem.addActionListener(this);
 		quit=new JMenuItem("Quit");
-		mitem.addActionListener(this);
+		quit.addActionListener(this);
 		quit.setMnemonic(KeyEvent.VK_Q);
 		menu.add(newcampaign);
 		menu.add(save);
@@ -79,15 +79,18 @@ public class MeriFrame extends JFrame implements ActionListener {
 		setLayout(new FlowLayout());
 		add(mpanel);
 		setJMenuBar(mbar);
+		
+		setTitle(title);
 		setVisible(true);
 		pack();
-		
-
 	}
 
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource()==newcampaign){
-			mpanel.startNewCampaign();
+			int choice=JOptionPane.showConfirmDialog(null, "Really start a new campaign?", "", JOptionPane.YES_NO_OPTION);
+			if (choice==JOptionPane.YES_OPTION){
+				mpanel.startNewCampaign();
+			}
 		} 
 		else if (e.getSource()==save){
 			int returnval=fc.showSaveDialog(this);
@@ -135,7 +138,9 @@ public class MeriFrame extends JFrame implements ActionListener {
 			}
 		}
 		else if (e.getSource()==quit){
-//			this.dispose();
+			setVisible(false);
+			dispose();
+			System.exit(0);
 		}
 		else if(e.getSource()==mitem){
 			mpanel.toggleActive();

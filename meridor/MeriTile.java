@@ -11,7 +11,6 @@ import static meridor.MConst.*;
 import javax.imageio.ImageIO;
 
 public class MeriTile {
-	final static int TILESIZE=40;
 	//need an additional ruined village tile
 	//potentially three other item types:
 	//equips, potions, treasures, and pets
@@ -68,7 +67,7 @@ public class MeriTile {
 		
 		if (tileGraphicMap.containsKey(terrain)){
 			if (isTreasure(terrain)){
-				g.drawImage(tileGraphicMap.get(terrain).getSubimage((50-TILESIZE)/2, 0, TILESIZE, TILESIZE), 
+				g.drawImage(tileGraphicMap.get(terrain), 
 						x, y, null);
 			} else{
 				g.drawImage(tileGraphicMap.get(terrain), x+(int)innerdim, y+(int)innerdim, null);

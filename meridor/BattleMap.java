@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Random;
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -25,7 +26,7 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 
 	final static int MAPDIM=10; //10 by 10 squares
 	final static int IMGDIM=30; //30 by 30 pixels
-	final static int TILEDIM=MeriTile.TILESIZE-1; //total size of cells
+	final static int TILEDIM=TILESIZE-1; //total size of cells
 	private int [] mouseLocation={0,0};
 	public MeriTile [][] tilemap;
 	private MeriPanel parent;
@@ -177,6 +178,23 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 			tilemap[ploc[0]][ploc[1]].setTerrain(petlist.get(i).getSpeciesID());
 		}
 		repaint();
+	}
+	/**
+	 * Returns a linked hash set of equip IDs
+	 * returns a linked set for ease of iteration/ordering
+	 */
+	public ArrayList<Integer> getEquipIDs(){
+		LinkedHashSet<Integer> equips=new LinkedHashSet<Integer>();
+		for (int i=0;i<tilemap.length;i++){
+			for (int j=0;j<tilemap[i].length;j++){
+				if (isWeapon(tilemap[i][j].terrain) ||isArmor(tilemap[i][j].terrain)){
+					equips.add(new Integer(tilemap[i][j].terrain));
+				}
+			}
+		}
+		ArrayList<Integer>equipsAL=new ArrayList<Integer>(equips);
+		return equipsAL;
+		
 	}
 	/**
 	 * clear pet locations (prior to updating them)
@@ -519,7 +537,7 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 		tilemap[location[0]][location[1]].setTerrain(tileID);
 	}
 	public int getPaneSize(){
-		return MAPDIM*MeriTile.TILESIZE;
+		return MAPDIM*MConst.TILESIZE;
 	}
 	public void paintComponent (Graphics g){
 		super.paintComponent(g);
@@ -592,10 +610,10 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 			int my=e.getY();
 			int xc=0,yc=0;
 			if (mx<getPaneSize()){
-				xc=mx/MeriTile.TILESIZE;
+				xc=mx/TILESIZE;
 			}
 			if (my<getPaneSize()){
-				yc=my/MeriTile.TILESIZE;
+				yc=my/TILESIZE;
 			}
 //			System.out.println(mx+" "+my+"/"+xc+" "+yc);
 			//if no target selected, try to reference parent coordinates to find a pet
@@ -629,7 +647,7 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 				//check for the healing case
 				else if (parent.selected.canHeal() && isAllyPetTerrain(tilemap[xc][yc].terrain)){
 					for (int i=0;i<parent.ally.size();i++){
-						if (parent.ally.get(i) != parent.selected && Arrays.equals(parent.ally.get(i).getLocation(),new int[]{xc,yc}) && parent.ally.get(i).dmg>0){
+						if (parent.ally.get(i) != parent.selected && Arrays.equals(parent.ally.get(i).getLocation(),new int[]{xc,yc}) && parent.ally.get(i).dmg>0 && parent.ally.get(i).hasMove()){
 							parent.updateBattleLog(MeriPet.heal(parent.selected, parent.ally.get(i)));
 							parent.resolvePlayerMove();
 							break;
@@ -725,7 +743,7 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 							parent.resolvePlayerMove();
 						} else if (isTreasure(tilemap[xc][yc].terrain)){
 							for (int i=0;i<parent.ally.size();i++){
-								parent.ally.get(i).gainStats(parent.campaign.getWave());
+								parent.ally.get(i).gainTreasureBoost(parent.campaign.getWave());
 							}
 							parent.campaign.treasureCollected=true;
 							parent.selected.setLocation(xc, yc);
@@ -760,8 +778,8 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 		mouseLocation[0]=e.getX();
 		mouseLocation[1]=e.getY();
 		if (mouseLocation[0]<getPaneSize() && mouseLocation[1]<getPaneSize()){
-			int xc=mouseLocation[0]/MeriTile.TILESIZE;
-			int yc=mouseLocation[1]/MeriTile.TILESIZE;
+			int xc=mouseLocation[0]/TILESIZE;
+			int yc=mouseLocation[1]/TILESIZE;
 			boolean found=false;
 			for (int i=0;i<parent.getPetLocations().size();i++){
 				if (Arrays.equals(parent.getPetLocations().get(i).getLocation(),new int[]{xc,yc})){

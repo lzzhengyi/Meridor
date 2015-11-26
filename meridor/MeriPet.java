@@ -9,6 +9,7 @@ public class MeriPet implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
 	final static int []STATCAPS={18,18,14};
 	final static int []STATCAPS2={21,19,14};
 	final static int[] CAMPAIGNS[]={STATCAPS,STATCAPS2};
@@ -21,14 +22,15 @@ public class MeriPet implements Serializable {
 			"Guardian"
 	};
 	final static int[]RANKREQS={3,9,32,64,96}; //the saves needed to get to each rank (listed above)
-	final Species [] SPEC ={
-			new Species (MOEHOG,"Moehog",4,15,8,9),
-			new Species (SKEITH,"Skeith",1,15,15,9),
-			new Species (TECHO,"Techo",2,15,8,9),
-			new Species (SCORCH,"Scorchio",2,15,10,9),
-			new Species (GRUNDO,"Grundo",2,15,10,9),
+	
+	final static Species [] SPEC ={
+			new Species (MOEHOG,"Moehog",3,15,8,8),
+			new Species (SKEITH,"Skeith",1,15,15,8),
+			new Species (TECHO,"Techo",2,15,8,8),
+			new Species (SCORCH,"Scorchio",2,15,10,8),
+			new Species (GRUNDO,"Grundo",2,15,10,8),
 			
-			new Species (D_MOE,"DMoehog",4,15,8,9),
+			new Species (D_MOE,"DMoehog",3,15,8,9),
 			new Species (D_SKE,"DSkeith",1,15,15,9),
 			new Species (D_TEC,"DTecho",2,15,8,9),
 			new Species (D_SCO,"DScorchio",2,15,10,9),
@@ -91,23 +93,6 @@ public class MeriPet implements Serializable {
 					species.basestats[i]+random.nextInt(5)
 			);
 		}
-		
-		//for meridell defenders (deprecated)
-//		if (sc==VILLAGER){
-//			for (int i=0;i<stats.length;i++){
-//				stats[i]=Math.min(
-//						STATCAPS[i],
-//						species.basestats[i]+rand.nextInt(5)
-//				);
-//			}
-//		} else {
-//			for (int i=0;i<stats.length;i++){
-//				stats[i]=Math.min(
-//						STATCAPS[i],
-//						species.basestats[i]+rand.nextInt(5)
-//				);
-//			}
-//		}
 	}
 	/**
 	 * Constructor for specific scenario enemies
@@ -239,6 +224,22 @@ public class MeriPet implements Serializable {
 			}
 		}
 	}
+	/**
+	 * I pass the campaign ID so that the game knows whether to use the high or
+	 * low stat caps. This method raises all stats by 1 unless the pet has reached
+	 * the stat cap.
+	 */
+	public void gainTreasureBoost(int campaign){
+		int [] caps=STATCAPS2;
+		if (campaign==1){
+			caps=STATCAPS;
+		}
+		for (int i=1;i<stats.length;i++){
+			if (stats[i]<caps[i]){
+				stats[i]++;
+			}
+		}
+	}
 	//***lazy initialization pattern
 	//I'm not sure about the implementation of location
 	//this implementation is intended to require the gamestate to
@@ -303,6 +304,17 @@ public class MeriPet implements Serializable {
 	 */
 	public String getSpeciesName(){
 		return species.name;
+	}
+	/**
+	 * Print the name of the pet's species
+	 */
+	public static String getSpeciesName(int sid){
+		for (int i=0;i<SPEC.length;i++){
+			if (SPEC[i].spid==sid){
+				return SPEC[i].name;
+			}
+		}
+		return "NA";
 	}
 	/**
 	 * Print the name and rank separated by return
@@ -398,26 +410,27 @@ public class MeriPet implements Serializable {
 	 * takes into account healseal by the enemy
 	 */
 	public boolean canHeal(){
-		return !healsealed && MConst.equipCanHeal(weapon) || MConst.equipCanHeal(armor);
+		return getSpeciesID()==GRUNDO && !healsealed && MConst.equipCanHeal(weapon) || MConst.equipCanHeal(armor);
 	}
 	/**
 	 * checks if either if the pet's items give it the ability to use lightning
 	 */
 	public boolean canLightning(){
-		return MConst.equipCanLightning(weapon) || MConst.equipCanLightning(armor);
+		return getSpeciesID()==GRUNDO && MConst.equipCanLightning(weapon) || MConst.equipCanLightning(armor);
 	}
 	/**
 	 * checks if either if the pet's items give it the ability to heal
 	 */
 	public boolean canRangeAttack(){
-		return MConst.equipCanRange(weapon) && calcRank()>=2;
+		return (getSpeciesID()==GRUNDO || getSpeciesID()==SCORCH) && MConst.equipCanRange(weapon) && calcRank()>=2;
 	}
 	/**
 	 * check if the pet can teleport with its current items
 	 * takes into account teleseal from the enemy
+	 * Currently only skeiths can teleport, but I might change this
 	 */
 	public boolean canTeleport(){
-		return tele>0 && !telesealed;
+		return getSpeciesID()==SKEITH && tele>0 && !telesealed;
 	}
 	/**
 	 * Checks if attacks and moves cost no move
@@ -429,13 +442,13 @@ public class MeriPet implements Serializable {
 	 * Check if the pet can clear another pet's teleseal status
 	 */
 	public boolean canBreakTeleSeal(){
-		return MConst.equipBreaksTeleSeal(weapon) || MConst.equipBreaksTeleSeal(armor);
+		return getSpeciesID()==TECHO && (MConst.equipBreaksTeleSeal(weapon) || MConst.equipBreaksTeleSeal(armor));
 	}
 	/**
 	 * Check if the pet can clear another pet's heal seal status
 	 */
 	public boolean canBreakHealSeal(){
-		return MConst.equipBreaksHealSeal(weapon) || MConst.equipBreaksHealSeal(armor);
+		return getSpeciesID()==MOEHOG && (MConst.equipBreaksHealSeal(weapon) || MConst.equipBreaksHealSeal(armor));
 	}
 	/**
 	 *An attempt at the damage formula; might want to export this method to const
@@ -609,6 +622,12 @@ public class MeriPet implements Serializable {
 		return species.spid;
 	}
 	/**
+	 * returns the max moves for a pet's species
+	 */
+	public int getMaxMove(){
+		return species.moves;
+	}
+	/**
 	 * Use this to set stats for enemy pets
 	 */
 	public void setStats(int[]nstats){
@@ -616,7 +635,7 @@ public class MeriPet implements Serializable {
 			stats=nstats;
 		}
 	}
-	private class Species implements Serializable {
+	private static class Species implements Serializable {
 		/**
 		 * 
 		 */
