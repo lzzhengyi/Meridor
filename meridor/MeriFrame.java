@@ -72,7 +72,7 @@ public class MeriFrame extends JFrame implements ActionListener {
 		menu.add(save);
 		menu.add(load);
 		menu.add(quit);
-		//menu.add(mitem);
+//		menu.add(mitem);
 		
 		mbar.add(menu);
 
@@ -143,7 +143,8 @@ public class MeriFrame extends JFrame implements ActionListener {
 			System.exit(0);
 		}
 		else if(e.getSource()==mitem){
-			mpanel.toggleActive();
+//			mpanel.toggleActive();
+			mpanel.displayVictoryPanel();
 		}
 		
 	}

@@ -80,6 +80,8 @@ public class Campaign implements Serializable {
 		new int[]{D_GRU,23,23,23,23,23,23}
 	},8,2);
 	
+	final static int BATTLES_PER_SCENARIO=3;
+	
 	public int currentBattle; //3 battles per scenario
 	public int currentScenario; //ten scenarios?
 	public boolean treasureCollected;
@@ -117,17 +119,25 @@ public class Campaign implements Serializable {
 		generateBasicTeam();
 	}
 	/**
-	 * 
+	 * Advances the scenario count so the campaign can load the next stage
+	 * Automatically resets mission specific variables when the current mission ends
+	 * Returns true if it reset mission specific variables
 	 */
 	public boolean advance (){
 		++currentBattle;
-		if (currentBattle>=3){
+		if (currentBattle>=BATTLES_PER_SCENARIO){
 			currentBattle=0;
 			currentScenario++;
 			treasureCollected=false;
 			return true;
 		}
 		return false;
+	}
+	/**
+	 * Returns whether the last mission in a campaign is complete
+	 */
+	public boolean checkCampaignComplete() {
+		 return currentBattle==BATTLES_PER_SCENARIO && currentScenario==scenarios.size()-1;
 	}
 	/**
 	 * Resets all attrited stats for allied units between fights

@@ -567,13 +567,13 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 		if (parent.checkGameWon()){
 			g.setColor(Color.black);
 			g.setFont(new Font("Castellar", Font.BOLD, 60));
-			g.drawString("VICTORY!", IMGDIM, IMGDIM*MAPDIM/2);
+			g.drawString("VICTORY!", IMGDIM+IMGDIM/2, IMGDIM*MAPDIM/2);
 			g.setFont(new Font("Castellar", Font.BOLD, 20));
 			g.drawString("Click the map to continue...", IMGDIM/2, IMGDIM*MAPDIM*3/4);
 		} else if (parent.checkGameLost()){
 			g.setColor(Color.black);
 			g.setFont(new Font("Castellar", Font.BOLD, 60));
-			g.drawString("DEFEAT...", IMGDIM, IMGDIM*MAPDIM/2);
+			g.drawString("DEFEAT...", IMGDIM+IMGDIM/2, IMGDIM*MAPDIM/2);
 			g.setFont(new Font("Castellar", Font.BOLD, 20));
 			g.drawString("Why not restart from the menu?", IMGDIM/2, IMGDIM*MAPDIM*3/4);
 		}

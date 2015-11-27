@@ -3,6 +3,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -10,18 +12,18 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.image.ImageObserver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 import javax.swing.*;
-import javax.swing.GroupLayout.Alignment;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
-public class MeriPanel extends JPanel implements MouseListener{
+public class MeriPanel extends JPanel {
 
 	final static int MAX_MOVES=5;
 	final static int MAX_LOGTEXT=10;
@@ -37,6 +39,8 @@ public class MeriPanel extends JPanel implements MouseListener{
 	public Campaign campaign;
 	public MeriPet selected;
 	public int selectedEquipID;
+	
+	public Dimension initSize=new Dimension(920,673);
 
 	ArrayList<String> battlelogtext=new ArrayList<String>(Arrays.asList(clearlogtext));
 
@@ -46,8 +50,11 @@ public class MeriPanel extends JPanel implements MouseListener{
 	SelectParty sp;
 	BattleLog bl;
 	EquipInfo ei;
+	VictoryPanel vp;
+	IntroPanel ip;
 
-	boolean battlemode=true;
+	boolean battlemode=false;
+	boolean victory=false;
 
 	public MeriPanel (){
 		movesLeft=MAX_MOVES;
@@ -58,8 +65,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 
 		ally=new ArrayList<MeriPet>();
 		foe=new ArrayList<MeriPet>();
-
-		addMouseListener(this);
+		
 		/*
 		 * Currently only three panels implemented
 		 * I am planning to add a title bar as well
@@ -69,32 +75,35 @@ public class MeriPanel extends JPanel implements MouseListener{
 		GridBagConstraints c=new GridBagConstraints();
 		c.weightx=0.5;
 		c.fill=GridBagConstraints.BOTH;
-
-		bm=new BattleMap(0,this);
+//
+//		bm=new BattleMap(0,this);
 		c.gridx=0;
 		c.gridy=0;
 		c.gridheight=GridBagConstraints.RELATIVE;
-		add(bm,c);
-
-		im=new InfoDisplay();
-		c.gridx=0;
-		c.gridy=1;
-		c.gridheight=1;
-		add(im,c);
-
-		bl=new BattleLog();
-		c.gridx=1;
-		c.gridy=1;
-		c.gridheight=GridBagConstraints.REMAINDER;
-		add(bl,c);
-
-		um=new UnitDisplay();
-		c.gridx=1;
-		c.gridy=0;
-		c.gridheight=GridBagConstraints.RELATIVE;
-		add (um,c);
+//		add(bm,c);
+		ip=new IntroPanel();
+		add (ip,c);
+//
+//		im=new InfoDisplay();
+//		c.gridx=0;
+//		c.gridy=1;
+//		c.gridheight=1;
+//		add(im,c);
+//
+//		bl=new BattleLog();
+//		c.gridx=1;
+//		c.gridy=1;
+//		c.gridheight=GridBagConstraints.REMAINDER;
+//		add(bl,c);
+//
+//		um=new UnitDisplay();
+//		c.gridx=1;
+//		c.gridy=0;
+//		c.gridheight=GridBagConstraints.RELATIVE;
+//		add (um,c);
 
 		ei=new EquipInfo();
+		
 		//		sp=new SelectParty();
 		//		c.gridx=0;
 		//		c.gridy=0;
@@ -517,14 +526,20 @@ public class MeriPanel extends JPanel implements MouseListener{
 	/**
 	 * Turn off the map
 	 * advance the campaign counter
+	 * 
+	 * If the game is won, show the victory screen
 	 */
 	public void resolveGame(){
-		toggleActive();
-		campaign.allies=ally;
-		campaign.advance();
-		if (campaign.currentBattle==0){
-			for (int i=0;i<ally.size();i++){
-				ally.get(i).promoted=false;
+		if (campaign.checkCampaignComplete()){
+			displayVictoryPanel();
+		} else {
+			toggleActive();
+			campaign.allies=ally;
+			campaign.advance();
+			if (campaign.currentBattle==0){
+				for (int i=0;i<ally.size();i++){
+					ally.get(i).promoted=false;
+				}
 			}
 		}
 	}
@@ -546,7 +561,14 @@ public class MeriPanel extends JPanel implements MouseListener{
 	 * and display the hidden panel: the unit select panel
 	 */
 	public void toggleActive (){
-
+		if (ip!=null){
+			remove(ip);
+			ip=null;
+		}
+		if (victory){
+			remove(vp);
+		}
+		
 		GridBagConstraints c=new GridBagConstraints();
 		c.weightx=0.5;
 		c.fill=GridBagConstraints.BOTH;
@@ -592,6 +614,34 @@ public class MeriPanel extends JPanel implements MouseListener{
 			c.gridheight=GridBagConstraints.REMAINDER;
 			add(bl,c);
 		}
+		revalidate();
+		repaint();
+	}
+	/**
+	 * Remove the other panels and display the victory screen
+	 */
+	public void displayVictoryPanel(){
+		if (battlemode){
+			battlemode=false;
+			remove(bm);
+			remove(um);
+			remove(im);
+			remove(bl);
+		} else {
+			if (sp!=null)
+				remove(sp);
+		}
+		vp=new VictoryPanel(this);
+		GridBagConstraints c=new GridBagConstraints();
+		c.weightx=0.5;
+		c.fill=GridBagConstraints.BOTH;
+		c.gridx=0;
+		c.gridy=0;
+		c.gridheight=GridBagConstraints.REMAINDER;
+		add (vp,c);
+		vp.setVisible(true);
+		vp.revalidate();
+		vp.repaint();
 		revalidate();
 		repaint();
 	}
@@ -1186,30 +1236,83 @@ public class MeriPanel extends JPanel implements MouseListener{
 			}
 		}
 	}
+	private class VictoryPanel extends JPanel{
 		
-	//get the coordinate of the player click and attempt to activate a warrior
-	//on that tile
-	public void mouseClicked(MouseEvent e) {
-		//the intent of this method is to have the player only able to click
-		//tiles with pets on them
-		//if right click, bring up info screen related to the terrain type?
+		JPanel parent;
+		
+		private VictoryPanel(JPanel parent){
+			this.parent=parent;
+		}
+		public Dimension getPreferredSize(){
+			return new Dimension(900,603);
+		}
+		public void paintComponent(Graphics g){
+			super.paintComponent(g);
+			setPreferredSize(initSize);
+			if (MConst.cheese!=null){
+				g.drawImage(MConst.cheese,0,0,null);
+			} else {
+				setBackground(Color.white);
+				//draw pictures here
+				Font vfont=new Font("Castellar", Font.BOLD, 60);
+				FontMetrics fm=g.getFontMetrics(vfont);
+				String victext="Defense of Meridor Complete!";
+				String [] victext2=new String []{"The last battle has been won, and the war is over.",
+						"Meridor still stands, and its citizens are safe.",
+						"Now it is time for brave warriors to lay down arms and take up plows",
+						"Until darkness once again threatens Meridor's bright hills.",
+						"",
+						"You are victorious!"};
+				int x=(getWidth()-fm.stringWidth(victext))/2;
+				int y=(fm.getHeight())*2;
+				g.setColor(Color.black);
+				g.setFont(vfont);
+				g.drawString(victext, x, y);
+				g.setFont(new Font("Castellar", Font.BOLD, 14));
+				for (int i=0;i<victext2.length;i++){
+					g.drawString(victext2[i], x, y + (i+1)* (g.getFontMetrics(g.getFont()).getHeight()+ 4));				
+				}
+			}
+		}
 	}
-	@Override
-	public void mouseEntered(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-
-	}
-	@Override
-	public void mouseExited(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-
-	}
-	@Override
-	public void mousePressed(MouseEvent arg0) {
-	}
-	@Override
-	public void mouseReleased(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-
+	/**
+	 * Displays a shield when starting
+	 */
+	private class IntroPanel extends JPanel implements MouseMotionListener {
+		
+		public IntroPanel(){
+			addMouseMotionListener(this);
+		}
+		/**
+		 * Note that this method determines the size of the application
+		 * (non-Javadoc)
+		 * @see javax.swing.JComponent#getPreferredSize()
+		 */
+		public Dimension getPreferredSize(){
+			return new Dimension(900,603);
+		}
+		public void paintComponent(Graphics g){
+			super.paintComponent(g);
+			setPreferredSize(initSize);
+			if (MConst.titleshield!=null){
+				setBackground(Color.white);
+				int xoffset=MConst.titleshield.getWidth()/2;
+				int yoffset=MConst.titleshield.getHeight()/2;
+				g.drawImage(MConst.titleshield, getWidth()/2-xoffset, getHeight()/2-yoffset, null);
+				g.setColor(Color.RED);
+				g.setFont(new Font("Segoe Script", Font.BOLD, 18));
+				g.drawString("Welcome to Defense of Meridor!", 20, 20);
+			}
+		}
+		@Override
+		public void mouseDragged(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+		@Override
+		public void mouseMoved(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			setToolTipText("You can start the game by selecting File->'New', or 'Load' a preexisting save!");
+		}
 	}
 }
