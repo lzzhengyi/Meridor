@@ -137,6 +137,12 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 	public void removeTreasure(){
 		tilemap[4][0].setTerrain(BLANK);
 	}
+	/**
+	 * Check whether treasure is present on the current map
+	 */
+	public boolean isTreasurePresent(){
+		return MConst.isTreasure(tilemap[4][0].terrain);
+	}
 	public void placePotions(int potion){
 		tilemap[4][5].setTerrain(potion);
 		tilemap[6][5].setTerrain(potion);
@@ -783,7 +789,24 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 			boolean found=false;
 			for (int i=0;i<parent.getPetLocations().size();i++){
 				if (Arrays.equals(parent.getPetLocations().get(i).getLocation(),new int[]{xc,yc})){
-					setToolTipText(parent.getPetLocations().get(i).name+" (HP:"+parent.getPetLocations().get(i).getDmgNHealth()+")");
+					MeriPet showme=parent.getPetLocations().get(i);
+					String statuscondition="";
+					if (showme.movesealed){
+						statuscondition+=":Cannot move";
+					}
+					if (showme.healsealed){
+						statuscondition+=":Cannot heal";
+					}
+					if (showme.telesealed){
+						statuscondition+=":Cannot teleport";
+					}
+					if (showme.canBreakHealSeal()){
+						statuscondition+=":Restores healing ability";
+					}
+					if (showme.canBreakTeleSeal()){
+						statuscondition+=":Restores teleporting";
+					}
+					setToolTipText(parent.getPetLocations().get(i).name+" (HP:"+parent.getPetLocations().get(i).getDmgNHealth()+")"+statuscondition);
 					found=true;
 					break;
 				}

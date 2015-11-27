@@ -186,7 +186,7 @@ public class MConst {
 			equipDescMap.put(WBOW_, "Once a Scorchio gains the experience of a Warrior, he can shoot his bow from 2 spaces away!");
 			equipDescMap.put(SFORC, "Zap adjacent enemies with the power of the Magic Force Spell to inflict massive damage! In the hands of a Grundo, you can not only zap your enemies, but you can zap a fellow trooper from anywhere to heal them. (Requires both pieces to have an available move).");
 			equipDescMap.put(WDSWO, "This weapon has a very nice special ability: whenever it hits it is guaranteed to do at least six points of damage. (Unfortunately it is not guaranteed to hit...)");
-			equipDescMap.put(WHALB, "Touched with the Magic of Meridell, this item grants it's owner unlimited moves (Max 5)!");
+			equipDescMap.put(WHALB, "Touched with the Magic of Meridell, this item grants its owner unlimited moves (Max 5)!");
 			equipDescMap.put(WDAXE, "Guaranteed to do at least 5 points of damage when it hits (is not guaranteed to hit).");
 			equipDescMap.put(SLIGH, "Zap Invaders with a lightning bolt! When used by Grundos, this powerful spell can attack Invaders from 2 spaces away! It can also heal multiple fellow fighters in the same column! To use the healing power, click a fellow fighter in the column you wish to target. (Costs 1 move per healing).");
 			equipDescMap.put(DTHUN, "The thunderous sounds from this staff will have your enemies trembling! Grundos know how to work these staffs the best. (As they do with all 'Magic' items!)");

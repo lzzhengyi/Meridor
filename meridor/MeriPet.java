@@ -30,13 +30,13 @@ public class MeriPet implements Serializable {
 			new Species (SCORCH,"Scorchio",2,15,10,8),
 			new Species (GRUNDO,"Grundo",2,15,10,8),
 			
-			new Species (D_MOE,"DMoehog",3,15,8,9),
-			new Species (D_SKE,"DSkeith",1,15,15,9),
-			new Species (D_TEC,"DTecho",2,15,8,9),
-			new Species (D_SCO,"DScorchio",2,15,10,9),
-			new Species (D_GRU,"DGrundo",2,15,10,9),
-			new Species (D_BUZ,"DBuzz",2,15,10,9),
-			new Species (D_GRA,"DGrarrl",2,15,10,9)
+			new Species (D_MOE,"Draco Moehog",3,15,8,9),
+			new Species (D_SKE,"Draco Skeith",1,15,15,9),
+			new Species (D_TEC,"Draco Techo",2,15,8,9),
+			new Species (D_SCO,"Draco Scorchio",2,15,10,9),
+			new Species (D_GRU,"Draco Grundo",2,15,10,9),
+			new Species (D_BUZ,"Draco Buzz",2,15,10,9),
+			new Species (D_GRA,"Draco Grarrl",2,15,10,9)
 	};
 	/*
 	 * The class that contains the features of player and enemy neopets
@@ -306,7 +306,9 @@ public class MeriPet implements Serializable {
 		return species.name;
 	}
 	/**
-	 * Print the name of the pet's species
+	 * Static reference to a pet's species name based on passed tileID (based on an implementation I dislike
+	 * This is required because when this method was written, only the MeriPet class knows the actual string names
+	 * of species
 	 */
 	public static String getSpeciesName(int sid){
 		for (int i=0;i<SPEC.length;i++){
@@ -314,7 +316,7 @@ public class MeriPet implements Serializable {
 				return SPEC[i].name;
 			}
 		}
-		return "NA";
+		return "Unknown";
 	}
 	/**
 	 * Print the name and rank separated by return

@@ -308,7 +308,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 	 * 3rd: move down/to nearest village
 	 */
 	public void processFoeTurn(){
-		if (foe.size()<2 && !campaign.treasureCollected){
+		if (foe.size()<2 && bm.isTreasurePresent()){
 			updateBattleLog("Foreseeing defeat, the invaders hurry their treasure off the map!");
 			bm.removeTreasure();
 		}
@@ -337,6 +337,7 @@ public class MeriPanel extends JPanel implements MouseListener{
 					//this is the only time random is called in a critical function
 					boolean teleseal=random.nextBoolean();
 					MeriPet sealtarget=ally.get(random.nextInt(ally.size()));
+					System.out.println(sealtarget.name+" "+teleseal);
 					if (teleseal && sealtarget.canTeleport()){
 						updateBattleLog(MeriPet.castTeleSeal(chosen, sealtarget));
 					} else if (!teleseal && (sealtarget.canHeal() || sealtarget.canLightning())){
@@ -500,10 +501,11 @@ public class MeriPanel extends JPanel implements MouseListener{
 				if (convert!=null){
 					updateBattleLog(convert.name+" has been freed from darkness!");
 					ally.add(convert);
-					selected.gainSave(campaign.getWave());
 				} else {
+					updateBattleLog("Defeated, "+foe.get(i).name+" roars as it is banished from your dimension!");
 					bm.setTerrain(foe.get(i).getLocation(), MConst.CRATER);
 				}
+				selected.gainSave(campaign.getWave());
 				foe.remove(i);
 			}
 		}
@@ -663,9 +665,13 @@ public class MeriPanel extends JPanel implements MouseListener{
 					int colIndex=columnAtPoint(p);
 					
 					try {
-						if (colIndex==4 && ally !=null && ally.size()>rowIndex){
+						if (colIndex==0 && ally !=null && ally.size()>rowIndex){
+							text=(ally.get(rowIndex).getSpeciesName());
+						}
+						else if (colIndex==4 && ally !=null && ally.size()>rowIndex){
 							text=MConst.getEquipToolTipStats(ally.get(rowIndex).weapon);
-						} else if (colIndex==6 && ally !=null && ally.size()>rowIndex){
+						}
+						else if (colIndex==6 && ally !=null && ally.size()>rowIndex){
 							text=MConst.getEquipToolTipStats(ally.get(rowIndex).armor);
 						}
 					} catch (RuntimeException e1){
@@ -706,7 +712,23 @@ public class MeriPanel extends JPanel implements MouseListener{
 					return getValueAt(0,c).getClass();
 				}
 			};
-			foetable=new JTable(sdtm);
+			foetable=new JTable(sdtm){
+				public String getToolTipText(MouseEvent e){
+					String text=null;
+					java.awt.Point p = e.getPoint();
+					int rowIndex=rowAtPoint(p);
+					int colIndex=columnAtPoint(p);
+					
+					try {
+						if (colIndex==0 && foe !=null && foe.size()>rowIndex){
+							text=(foe.get(rowIndex).getSpeciesName());
+						}
+					} catch (RuntimeException e1){
+//						System.out.println("Tooltip error");
+					}
+					return text;
+				}
+			};
 			foetable.setRowHeight(30);
 			foetable.getColumnModel().getColumn(0).setPreferredWidth(34);
 			foetable.getColumnModel().getColumn(1).setPreferredWidth(190);
@@ -809,9 +831,13 @@ public class MeriPanel extends JPanel implements MouseListener{
 					int rowIndex=rowAtPoint(p);
 					int colIndex=columnAtPoint(p);
 					try {
-						if (colIndex==6 && ally !=null && ally.size()>rowIndex){
+						if (colIndex==2 && ally !=null && ally.size()>rowIndex){
+							text=(ally.get(rowIndex).getSpeciesName());
+						}
+						else if (colIndex==6 && ally !=null && ally.size()>rowIndex){
 							text=MConst.getEquipToolTipStats(ally.get(rowIndex).weapon);
-						} else if (colIndex==8 && ally !=null && ally.size()>rowIndex){
+						}
+						else if (colIndex==8 && ally !=null && ally.size()>rowIndex){
 							text=MConst.getEquipToolTipStats(ally.get(rowIndex).armor);
 						}
 					} catch (RuntimeException e1){

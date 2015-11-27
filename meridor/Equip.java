@@ -1,6 +1,6 @@
 package meridor;
 import java.awt.Canvas;
-import static meridor.MConst.*;
+import static meridor.MConst.equipDescMap;
 
 public class Equip {
 
