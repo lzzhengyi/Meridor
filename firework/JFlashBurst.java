@@ -3,13 +3,12 @@ package firework;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
-import java.util.ArrayList;
 
 public class JFlashBurst
   extends JFirework
 {
-  private static final int MSD = 50;
-  private static final int NDT = 25;
+  private static final int MSD = 50; //not used due to decompilation
+  private static final int NDT = 25; //need to fix constants below
   private int smallDuration;
   private int cSize;
   private Color cColor;

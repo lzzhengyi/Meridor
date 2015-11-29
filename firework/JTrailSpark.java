@@ -8,7 +8,7 @@ import java.util.ArrayList;
 public class JTrailSpark
   extends JSpark
 {
-  private static final int TRAIL_SIZE = 10;
+  private static final int TRAIL_SIZE = 10; //references removed due to decompilation
   private ArrayList<Point> pointTrail;
   
   public JTrailSpark(Point nx, int ra, Color mc, double x, double y)

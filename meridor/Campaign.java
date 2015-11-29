@@ -137,7 +137,7 @@ public class Campaign implements Serializable {
 	 * Returns whether the last mission in a campaign is complete
 	 */
 	public boolean checkCampaignComplete() {
-		 return currentBattle==BATTLES_PER_SCENARIO && currentScenario==scenarios.size()-1;
+		 return currentBattle+1>=BATTLES_PER_SCENARIO && currentScenario+1>=scenarios.size()-1;
 	}
 	/**
 	 * Resets all attrited stats for allied units between fights

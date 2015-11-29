@@ -19,12 +19,11 @@ public class FireworkPanel
   private ArrayList<JFirework> floatingList;
   final int MAX_DUR = 29;
   final int SPARK_COUNT = 50;
-  final String GREETING = "Campaign Victory!";
-  final String GREETING2 = " ";
   private String greetinghead="";
-  private String [] greetingtext;
+  private String [] greetingtext={};
   final int GR_SIZE = 200;
   final Font FONTVG = new Font("Harrington", 2, 60);
+  final Font FONTVT = new Font("Harrington", 2, 24);
   private Color[] colorList;
   final int colorNo = 100;
   final int DELAY1 = 20;
@@ -46,8 +45,12 @@ public class FireworkPanel
     for (int i = 0; i < this.colorList.length; i++) {
       this.colorList[i] = new Color(rand.nextInt(255), rand.nextInt(255), rand.nextInt(255));
     }
-    Point nx = new Point(20, 200);
-    ArrayList<Point> pl = new ArrayList();
+    /*
+     * This code specifies a shape to be drawn by fireworks, but I don't need this function
+     * in the current version. Leaving it in case I need it in the future.
+     */
+//    Point nx = new Point(20, 200);
+//    ArrayList<Point> pl = new ArrayList();
 //    pl.addAll(JShapeWork.lineMaker(new Point(nx.x + 0, nx.y + 280), new Point(nx.x + 140, nx.y + 0)));
 //    pl.addAll(JShapeWork.lineMaker(new Point(nx.x + 0, nx.y + 260), new Point(nx.x + 100, nx.y + 260)));
 //    pl.addAll(JShapeWork.lineMaker(new Point(nx.x + 0, nx.y + 380), new Point(nx.x + 140, nx.y + 180)));
@@ -73,7 +76,18 @@ public class FireworkPanel
     
 //    this.jispy = new JShapeWork(300, pl, new Color(160, 0, 186), 29, 10);
   }
-  
+  /**
+   * Change the body of the displayed message
+   */
+  public void setText(String [] text){
+	  greetingtext=text;
+  }
+  /**
+   * Change the header of the displayed message
+   */
+  public void setHeader(String text){
+	  greetinghead=text;
+  }
   public void paintComponent(Graphics page)
   {
     super.paintComponent(page);
@@ -88,8 +102,12 @@ public class FireworkPanel
     }
     page.setFont(this.FONTVG);
     page.setColor(Color.WHITE);
-    page.drawString(GREETING, width / 2 - 200, height / 2);
-    page.drawString(" ", width / 2 - 100, height / 2 + 80);
+    page.drawString(greetinghead, width / 8, height / 6);
+    page.setFont(FONTVT);
+    for (int i=0;i<greetingtext.length;i++){
+        page.drawString(greetingtext[i], width / 8, height / 6 + 60 + 60 * i);
+    }
+
   }
   
   private class HMouseListener

@@ -22,6 +22,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
+import firework.FireworkPanel;
 
 public class MeriPanel extends JPanel {
 
@@ -40,7 +41,7 @@ public class MeriPanel extends JPanel {
 	public MeriPet selected;
 	public int selectedEquipID;
 	
-	public Dimension initSize=new Dimension(920,673);
+	public final static Dimension initSize=new Dimension(900,603);
 
 	ArrayList<String> battlelogtext=new ArrayList<String>(Arrays.asList(clearlogtext));
 
@@ -51,6 +52,7 @@ public class MeriPanel extends JPanel {
 	BattleLog bl;
 	EquipInfo ei;
 	VictoryPanel vp;
+	FireworkPanel fwp;
 	IntroPanel ip;
 
 	boolean battlemode=false;
@@ -66,50 +68,22 @@ public class MeriPanel extends JPanel {
 		ally=new ArrayList<MeriPet>();
 		foe=new ArrayList<MeriPet>();
 		
-		/*
-		 * Currently only three panels implemented
-		 * I am planning to add a title bar as well
-		 * Also a text log
-		 */
+		ei=new EquipInfo();
+		
+		initIntroScreen();
+	}
+	public void initIntroScreen (){
 		setLayout(new GridBagLayout());
 		GridBagConstraints c=new GridBagConstraints();
 		c.weightx=0.5;
 		c.fill=GridBagConstraints.BOTH;
-//
-//		bm=new BattleMap(0,this);
+
 		c.gridx=0;
 		c.gridy=0;
 		c.gridheight=GridBagConstraints.RELATIVE;
-//		add(bm,c);
+		
 		ip=new IntroPanel();
 		add (ip,c);
-//
-//		im=new InfoDisplay();
-//		c.gridx=0;
-//		c.gridy=1;
-//		c.gridheight=1;
-//		add(im,c);
-//
-//		bl=new BattleLog();
-//		c.gridx=1;
-//		c.gridy=1;
-//		c.gridheight=GridBagConstraints.REMAINDER;
-//		add(bl,c);
-//
-//		um=new UnitDisplay();
-//		c.gridx=1;
-//		c.gridy=0;
-//		c.gridheight=GridBagConstraints.RELATIVE;
-//		add (um,c);
-
-		ei=new EquipInfo();
-		
-		//		sp=new SelectParty();
-		//		c.gridx=0;
-		//		c.gridy=0;
-		//		c.gridheight=GridBagConstraints.RELATIVE;
-		//		sp.setVisible(false);
-		//		add(sp,c);
 	}
 	/**
 	 * Intended to be called at the beginning of a battle to set up the field and units
@@ -566,7 +540,7 @@ public class MeriPanel extends JPanel {
 			ip=null;
 		}
 		if (victory){
-			remove(vp);
+			remove(fwp);
 		}
 		
 		GridBagConstraints c=new GridBagConstraints();
@@ -621,6 +595,7 @@ public class MeriPanel extends JPanel {
 	 * Remove the other panels and display the victory screen
 	 */
 	public void displayVictoryPanel(){
+		victory=true;
 		if (battlemode){
 			battlemode=false;
 			remove(bm);
@@ -631,17 +606,27 @@ public class MeriPanel extends JPanel {
 			if (sp!=null)
 				remove(sp);
 		}
-		vp=new VictoryPanel(this);
+		fwp=new FireworkPanel();
+	    fwp.setHeader("Campaign Victory!");
+	    fwp.setText(new String []
+	    		{"The last battle has been won, and the war is over.",
+					"Meridor still stands, and its citizens are safe.",
+					"Now it is time for brave warriors to lay down arms and take up plows",
+					"Until darkness once again threatens Meridor's bright hills.",
+					"",
+					"You are victorious!"
+	    		});
+	    fwp.setPreferredSize(initSize);
 		GridBagConstraints c=new GridBagConstraints();
 		c.weightx=0.5;
 		c.fill=GridBagConstraints.BOTH;
 		c.gridx=0;
 		c.gridy=0;
 		c.gridheight=GridBagConstraints.REMAINDER;
-		add (vp,c);
-		vp.setVisible(true);
-		vp.revalidate();
-		vp.repaint();
+		add (fwp,c);
+		fwp.setVisible(true);
+		fwp.revalidate();
+		fwp.repaint();
 		revalidate();
 		repaint();
 	}
@@ -1244,34 +1229,30 @@ public class MeriPanel extends JPanel {
 			this.parent=parent;
 		}
 		public Dimension getPreferredSize(){
-			return new Dimension(900,603);
+			return initSize;
 		}
 		public void paintComponent(Graphics g){
 			super.paintComponent(g);
 			setPreferredSize(initSize);
-			if (MConst.cheese!=null){
-				g.drawImage(MConst.cheese,0,0,null);
-			} else {
-				setBackground(Color.white);
-				//draw pictures here
-				Font vfont=new Font("Castellar", Font.BOLD, 60);
-				FontMetrics fm=g.getFontMetrics(vfont);
-				String victext="Defense of Meridor Complete!";
-				String [] victext2=new String []{"The last battle has been won, and the war is over.",
-						"Meridor still stands, and its citizens are safe.",
-						"Now it is time for brave warriors to lay down arms and take up plows",
-						"Until darkness once again threatens Meridor's bright hills.",
-						"",
-						"You are victorious!"};
-				int x=(getWidth()-fm.stringWidth(victext))/2;
-				int y=(fm.getHeight())*2;
-				g.setColor(Color.black);
-				g.setFont(vfont);
-				g.drawString(victext, x, y);
-				g.setFont(new Font("Castellar", Font.BOLD, 14));
-				for (int i=0;i<victext2.length;i++){
-					g.drawString(victext2[i], x, y + (i+1)* (g.getFontMetrics(g.getFont()).getHeight()+ 4));				
-				}
+			setBackground(Color.white);
+			//draw pictures here
+			Font vfont=new Font("Castellar", Font.BOLD, 60);
+			FontMetrics fm=g.getFontMetrics(vfont);
+			String victext="Defense of Meridor Complete!";
+			String [] victext2=new String []{"The last battle has been won, and the war is over.",
+					"Meridor still stands, and its citizens are safe.",
+					"Now it is time for brave warriors to lay down arms and take up plows",
+					"Until darkness once again threatens Meridor's bright hills.",
+					"",
+					"You are victorious!"};
+			int x=(getWidth()-fm.stringWidth(victext))/2;
+			int y=(fm.getHeight())*2;
+			g.setColor(Color.black);
+			g.setFont(vfont);
+			g.drawString(victext, x, y);
+			g.setFont(new Font("Castellar", Font.BOLD, 14));
+			for (int i=0;i<victext2.length;i++){
+				g.drawString(victext2[i], x, y + (i+1)* (g.getFontMetrics(g.getFont()).getHeight()+ 4));				
 			}
 		}
 	}
@@ -1289,7 +1270,7 @@ public class MeriPanel extends JPanel {
 		 * @see javax.swing.JComponent#getPreferredSize()
 		 */
 		public Dimension getPreferredSize(){
-			return new Dimension(900,603);
+			return initSize;
 		}
 		public void paintComponent(Graphics g){
 			super.paintComponent(g);

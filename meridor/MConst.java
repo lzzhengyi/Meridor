@@ -85,7 +85,7 @@ public class MConst {
 	public static Map<Integer, Equip>equipMap=null;
 	public static Map<Integer, String>equipDescMap=null;
 	
-	public static BufferedImage cheese,titleshield;
+	public static BufferedImage titleshield;
 	
 	public static void initItems(){
 		int [] emptyset=new int[]{};
@@ -196,14 +196,6 @@ public class MConst {
 		}
 	}
 	public static void loadImages(){
-		if (cheese==null){
-			try {
-				cheese=ImageIO.read(new File("cheese2.jpg"));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
 		if (titleshield==null){
 			try {
 				titleshield=ImageIO.read(new File("goodshield6.gif"));

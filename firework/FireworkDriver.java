@@ -15,7 +15,17 @@ public class FireworkDriver
     
     hf.setLayout(new BorderLayout());
     hf.setPreferredSize(new Dimension(950, 650));
-    hf.add (new FireworkPanel());
+    FireworkPanel fwp=new FireworkPanel();
+    fwp.setHeader("Campaign Victory!");
+    fwp.setText(new String []
+    		{"The last battle has been won, and the war is over.",
+				"Meridor still stands, and its citizens are safe.",
+				"Now it is time for brave warriors to lay down arms and take up plows",
+				"Until darkness once again threatens Meridor's bright hills.",
+				"",
+				"You are victorious!"
+    		});
+    hf.add (fwp);
     
     hf.getContentPane();
     hf.pack();
