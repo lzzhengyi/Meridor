@@ -12,6 +12,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.ImageObserver;
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class MeriPanel extends JPanel {
 	final static int MAX_LOGTEXT=10;
 	final static int MAX_VILLAGES=6;
 
-	final static String[] clearlogtext={};
+	final static String[] clearlogtext={"Hover the mouse over tiles on the map for information!"};
 
 	public static Random random =MConst.random;
 	public ArrayList<MeriPet> ally,foe;
@@ -796,15 +797,34 @@ public class MeriPanel extends JPanel {
 				"Name","Selected","","Rank","Health","Attack","","Defence","","Saves"	
 		};
 
+		JLabel shieldicon,shieldtitle;
 		JButton confirmteam;
 		JTable selector;
 		Object[][]allyname;
 		boolean[]petchosen; //implementing this the HARD WAY: keeping a separate array to store selected status
 
 		private SelectParty (){
+			setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 			setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 			JPanel toppanel=new JPanel();
-
+			JPanel bottompanel=new JPanel();
+			
+			bottompanel.setLayout(new BoxLayout(bottompanel, BoxLayout.Y_AXIS));
+			bottompanel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
+			bottompanel.setBackground(Color.white);
+			shieldicon=new JLabel(new ImageIcon(MConst.shieldMap.get(MConst.SHIELDTITLES[0])));
+			shieldtitle=new JLabel(MConst.SHIELDTITLES[0]);
+			
+			confirmteam=new JButton("Confirm Team Selection");
+			confirmteam.addActionListener(this);
+			confirmteam.setMnemonic(KeyEvent.VK_C);
+			bottompanel.add (shieldicon);
+			shieldicon.setAlignmentX(Component.CENTER_ALIGNMENT);
+			bottompanel.add (shieldtitle);
+			shieldtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+			bottompanel.add(confirmteam);
+			confirmteam.setAlignmentX(Component.CENTER_ALIGNMENT);
+			
 			JLabel spinstruction=new JLabel("Only the selected (checked) pets will go to the next mission (Max 5). Unselected pets will return to their families.");
 			JLabel rninstruction=new JLabel("Doubleclick a pet's name to rename it.");
 
@@ -813,25 +833,40 @@ public class MeriPanel extends JPanel {
 			toppanel.add(jspA);
 			selector.setFillsViewportHeight(true);
 
-			toppanel.setLayout(new BoxLayout(toppanel, BoxLayout.X_AXIS));
-
-			confirmteam=new JButton("Confirm Team Selection");
-			confirmteam.addActionListener(this);
-			confirmteam.setMnemonic(KeyEvent.VK_C);
-
+			toppanel.setLayout(new BoxLayout(toppanel, BoxLayout.Y_AXIS));
+			
 			add (spinstruction);
 			add (rninstruction);
 			add (toppanel);
-			add (confirmteam);
+			bottompanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+			add (Box.createHorizontalGlue());
+			add (Box.createHorizontalGlue());
+			add (Box.createHorizontalGlue());
+			add (Box.createHorizontalGlue());
+			add (Box.createHorizontalGlue());
+			add (Box.createHorizontalGlue());
+			add (Box.createHorizontalGlue());
+			add (bottompanel);
+			
+
 
 			setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-			setPreferredSize(new Dimension(900,550));
+			setPreferredSize(initSize);
 		}
 		/**
 		 * Updates every tick and on init
 		 * may need to adjust weapon name length
 		 */
 		public void updateStatData(){
+			int titleindex=campaign.currentScenario+0; //needs to be changed to a get
+			if (titleindex==0)
+				titleindex+=campaign.currentBattle;
+			else
+				titleindex+=2;
+
+			shieldicon.setIcon(new ImageIcon(MConst.shieldMap.get(MConst.SHIELDTITLES[titleindex])));
+			shieldtitle.setText(MConst.SHIELDTITLES[titleindex]);
+			
 			allyname=new Object[ally.size()][];
 			petchosen=new boolean[ally.size()];
 			for (int i=0;i<ally.size();i++){
@@ -1259,10 +1294,13 @@ public class MeriPanel extends JPanel {
 	/**
 	 * Displays a shield when starting
 	 */
-	private class IntroPanel extends JPanel implements MouseMotionListener {
+	private class IntroPanel extends JPanel implements MouseMotionListener, MouseListener {
+		
+		private boolean clicked=false;
 		
 		public IntroPanel(){
 			addMouseMotionListener(this);
+			addMouseListener(this);
 		}
 		/**
 		 * Note that this method determines the size of the application
@@ -1283,6 +1321,8 @@ public class MeriPanel extends JPanel {
 				g.setColor(Color.RED);
 				g.setFont(new Font("Segoe Script", Font.BOLD, 18));
 				g.drawString("Welcome to Defense of Meridor!", 20, 20);
+				g.drawString("Click to start!", 20, 50);
+				g.drawString("You can also start the game by selecting File->' New ', or ' Load ' a preexisting save.", 20, 80);
 			}
 		}
 		@Override
@@ -1293,7 +1333,34 @@ public class MeriPanel extends JPanel {
 		@Override
 		public void mouseMoved(MouseEvent arg0) {
 			// TODO Auto-generated method stub
-			setToolTipText("You can start the game by selecting File->'New', or 'Load' a preexisting save!");
+			setToolTipText("Click anywhere to start! Or, 'Load' a preexisting save!");
+		}
+		@Override
+		public void mouseClicked(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+		}
+		@Override
+		public void mouseEntered(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+		@Override
+		public void mouseExited(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+		@Override
+		public void mousePressed(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			// TODO Auto-generated method stub
+			if (!clicked){
+				clicked=true;
+				startNewCampaign();
+			}
 		}
 	}
 }

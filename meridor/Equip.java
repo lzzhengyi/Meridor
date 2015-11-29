@@ -108,19 +108,15 @@ public class Equip {
 		}
 		return false;		
 	}
-//	public String getBonusSpeciesString(){
-//		String sp="";
-//		for (int i=0;i<bonusSpecies.length;i++){
-//			sp+=MConst.bonusSpecies[i]
-//		}
-//		return sp;
-//	}
 	/**
 	 * Returns the string used to describe item stats on the battle map tooltip
 	 */
 	public String getToolTipStats(){
-		
-		return name+": "+atk+"/"+def+"/ SP:"+satk+"/"+sdef;
+		if (getBonusSpecies()>=0){
+			return name+": "+atk+"/"+def+" | "+MeriPet.getSpeciesName(getBonusSpecies())+" :"+satk+"/"+sdef;
+		} else {
+			return name+": "+atk+"/"+def;
+		}
 	}
 	/**
 	 * Compares species ID to the id of the specbon

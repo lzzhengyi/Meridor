@@ -791,20 +791,27 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 				if (Arrays.equals(parent.getPetLocations().get(i).getLocation(),new int[]{xc,yc})){
 					MeriPet showme=parent.getPetLocations().get(i);
 					String statuscondition="";
+					if (showme.canRangeAttack()){
+						statuscondition+=":Can range attack";
+					}
 					if (showme.movesealed){
 						statuscondition+=":Cannot move";
 					}
 					if (showme.healsealed){
 						statuscondition+=":Cannot heal";
+					} else if (showme.canHeal()){
+						statuscondition+=":Can heal";
 					}
 					if (showme.telesealed){
 						statuscondition+=":Cannot teleport";
+					} else if (showme.canTeleport()){
+						statuscondition+=":Can teleport";
 					}
 					if (showme.canBreakHealSeal()){
-						statuscondition+=":Restores healing ability";
+						statuscondition+=":Can restore healing ability";
 					}
 					if (showme.canBreakTeleSeal()){
-						statuscondition+=":Restores teleporting";
+						statuscondition+=":Can restore teleporting";
 					}
 					setToolTipText(parent.getPetLocations().get(i).name+" (HP:"+parent.getPetLocations().get(i).getDmgNHealth()+")"+statuscondition);
 					found=true;
@@ -815,8 +822,24 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 				setToolTipText(getEquipToolTipStats(tilemap[xc][yc].terrain));
 				found=true;
 			}
+			if (isPotion(tilemap[xc][yc].terrain)){
+				setToolTipText("Potions heal pets who pick them up, before vanishing!");
+				found=true;
+			}
+			if (isTreasure(tilemap[xc][yc].terrain)){
+				setToolTipText("Collect the lost treasure to grant your army a permanent blessing!");
+				found=true;
+			}
+			if (tilemap[xc][yc].terrain==MOUNTAIN){
+				setToolTipText("Mountains are impassable barriers. Use them to your advantage!");
+				found=true;
+			}
+			if (tilemap[xc][yc].terrain==VILLAGE){
+				setToolTipText("The homes of innocents in danger of being corrupted by darkness. At least three villages must survive, or you lose!");
+				found=true;
+			}
 			if (!found){
-				setToolTipText(null);
+				setToolTipText("Click on a pet to select it, then click on an adjacent enemy to attack, or on an adjacent item to pick it up.");
 			}
 		} else {
 			setToolTipText(null);

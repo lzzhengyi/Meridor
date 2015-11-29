@@ -17,6 +17,12 @@ public class MConst {
 	final static int TILESIZE=40;
 	final static boolean WEAPON=true;
 	
+	public final static String [] SHIELDTITLES = {
+			"Stablehand","Serf","Peon",
+			"Page","Squire","Guard",
+			"High Guard","Knight","Baron",
+			"Earl","Duke","Lord",};
+	
 	public enum DARKLORDS {D_BUZ,D_GRA};
 	private final static int noeffect=-1;
 	private final static int rangedatk=0;
@@ -84,6 +90,7 @@ public class MConst {
 	public static Map<Integer, ImageIcon>imageIconMap=null;
 	public static Map<Integer, Equip>equipMap=null;
 	public static Map<Integer, String>equipDescMap=null;
+	public static Map<String, Image>shieldMap=null;
 	
 	public static BufferedImage titleshield;
 	
@@ -199,6 +206,26 @@ public class MConst {
 		if (titleshield==null){
 			try {
 				titleshield=ImageIO.read(new File("goodshield6.gif"));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		if (shieldMap==null){
+			try {
+				shieldMap=new HashMap<String,Image>();
+				shieldMap.put("Stablehand", ImageIO.read(new File("Stablehand.jpg")));
+				shieldMap.put("Serf", ImageIO.read(new File("Serf.jpg")));
+				shieldMap.put("Peon", ImageIO.read(new File("Peon.jpg")));
+				shieldMap.put("Page", ImageIO.read(new File("Page.jpg")));
+				shieldMap.put("Squire", ImageIO.read(new File("Squire.jpg")));
+				shieldMap.put("Guard", ImageIO.read(new File("Guard.jpg")));
+				shieldMap.put("High Guard", ImageIO.read(new File("High_Guard.jpg")));
+				shieldMap.put("Knight", ImageIO.read(new File("Knight.jpg")));
+				shieldMap.put("Baron", ImageIO.read(new File("Baron.jpg")));
+				shieldMap.put("Earl", ImageIO.read(new File("Earl.jpg")));
+				shieldMap.put("Duke", ImageIO.read(new File("Duke.jpg")));
+				shieldMap.put("Lord", ImageIO.read(new File("Lord.jpg")));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
