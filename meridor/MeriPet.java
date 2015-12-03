@@ -650,7 +650,6 @@ public class MeriPet implements Serializable {
 		 * Base stats
 		 */
 		int spid; //species id, determines whether it can use powers
-		//AI pets can always use their powers
 		String name;
 		int moves;
 		int[]basestats;

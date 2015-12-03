@@ -32,7 +32,7 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 	private MeriPanel parent;
 	
 	//level is needed to restrict spawned items and enemies
-	public BattleMap (int level, MeriPanel p){		
+	public BattleMap (MeriPanel p){		
 		parent=p;
 
 		genBlankMap();
@@ -57,6 +57,9 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 			xoff+=TILEDIM;
 		}
 	}
+	/**
+	 * Generates a map according to hard-coded specifications
+	 */
 	public void genTerrainMap(){
 		//mountains on the mid two and outer two, even rows only
 		//six villages, two/row, rows 6-8
@@ -131,6 +134,9 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 			}
 		}
 	}
+	/**
+	 * The treasure is always placed in the middle of the top row
+	 */
 	public void placeTreasure(int treasure){
 		tilemap[4][0].setTerrain(treasure);
 	}
@@ -143,15 +149,19 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 	public boolean isTreasurePresent(){
 		return MConst.isTreasure(tilemap[4][0].terrain);
 	}
+	/**
+	 * Potions are always placed in the middle row
+	 */
 	public void placePotions(int potion){
 		tilemap[4][5].setTerrain(potion);
 		tilemap[6][5].setTerrain(potion);
 	}
+
 	/**
-	 * Takes a four integer array as parameter
 	 * First two ints are weapons, the other 2 armor
-	 * pick one of each
-	 * it appears that equips can spawn anywhere from rows 4-8 (numbered from 0)
+	 * pick one of each and place them on the map
+	 * equips can spawn anywhere from rows 4-8 (numbered from 0)
+	 * @param equips: a four integer array; method will make its own if the input is invalid
 	 */
 	public void placeEquips(int[]equips){
 		if (tilemap !=null && equips.length>=4){
@@ -229,10 +239,15 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 			return false;
 		}
 	}
-	//return an array of adjacent tiles
-	//behind first, front next, then sides from top to bottom 
-	//eight surrounding tiles
-	//The goal of this method is to get ordered list of nodes for enemy ai to check
+
+	/**
+	 * 	The goal of this method is to get ordered list of nodes for enemy ai to check
+	 * 	behind first, front next, then sides from top to bottom
+	 * 
+	 * @param x
+	 * @param y
+	 * @return an array of adjacent tiles
+	 */
 	public ArrayList <MeriTile> getAdj (int x, int y){
 		ArrayList <MeriTile> results=new ArrayList<MeriTile>();
 		//top
@@ -311,10 +326,14 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 		}
 		return results;
 	}
+
 	/**
 	 * returns 3 below only
 	 * emptylist means bottom row
-	 * Direction is used to determine preference to left or right
+	 * @param x
+	 * @param y
+	 * @param direction is used to determine preference to left or right
+	 * @return
 	 */
 	public ArrayList <MeriTile> getAdjBelow (int x, int y, int direction){
 		ArrayList <MeriTile> results=new ArrayList<MeriTile>();
@@ -374,8 +393,12 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 		}
 		return results;
 	}
+
 	/**
 	 * Return a list of coords of adjacent villages
+	 * @param x
+	 * @param y
+	 * @return
 	 */
 	public ArrayList<int[]> findAdjVillage(int x,int y){
 		ArrayList <MeriTile> adjlist=getAdj(x,y);
@@ -388,8 +411,12 @@ public class BattleMap extends JPanel implements ActionListener,MouseListener,Mo
 		}
 		return vlocs;
 	}
+	
 	/**
 	 * Given a foe's location, searches for the first ally to be prioritized for attack
+	 * @param x
+	 * @param y
+	 * @return
 	 */
 	public ArrayList<MeriPet> findNextFoeTarget(int x, int y){
 		ArrayList<MeriPet> targets=new ArrayList<MeriPet>();

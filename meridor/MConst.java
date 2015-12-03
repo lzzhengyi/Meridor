@@ -12,6 +12,7 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 
 public class MConst {
 	final static int TILESIZE=40;
@@ -207,7 +208,7 @@ public class MConst {
 			try {
 				titleshield=ImageIO.read(new File("goodshield6.gif"));
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+				JOptionPane.showMessageDialog(null, "Error: title image missing.");
 				e.printStackTrace();
 			}
 		}
@@ -227,7 +228,7 @@ public class MConst {
 				shieldMap.put("Duke", ImageIO.read(new File("Duke.jpg")));
 				shieldMap.put("Lord", ImageIO.read(new File("Lord.jpg")));
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+				JOptionPane.showMessageDialog(null, "Error: rank shield images missing.");
 				e.printStackTrace();
 			}
 		}
@@ -309,24 +310,45 @@ public class MConst {
 	}
 	/**
 	 * Check if the tile is passable TO ENEMY CHARACTERS
+	 * 
+	 * The checks for potions and items require a specific impl
 	 */
 	public static boolean checkTileIDPassable(int id){
 		return id==BLANK || id == CRATER ||
-				(id>=P_HEAL && id <=P_WELL) ||
-				id>=WMACE;
+				isPotion(id) ||
+				isWeapon(id) || isArmor(id);
 	}
-	/**
-	 * IDs of all weapons
-	 */
-	public static int[] getWeaponIDList(){
-		return new int[]{30,31,32,33,34,35,36,37,38,39,48};
-	}
+
 	/**
 	 * IDs of all weapons
 	 */
 	private static ArrayList<Integer> getWeaponIDArrayList(){
-		ArrayList<Integer>wid=new ArrayList<Integer>(Arrays.asList(30,31,32,33,34,35,36,37,38,39,48));
+		ArrayList<Integer>wid=new ArrayList<Integer>(Arrays.asList(
+				 WMACE,
+				 WBSWO,
+				 WHAMM,
+				 WBBAX,
+				 WBOW_,
+				 SFORC,
+				 WDSWO,
+				 WHALB,
+				 WDAXE,
+				 SLIGH,
+				 WDEFL
+				));
 		return wid;
+	}
+	/**
+	 * Fetch the ID of a random equipment item
+	 * @param wtype true for weapon, false for armour
+	 * @return
+	 */
+	public static int getRandomEquip (boolean wtype){
+		if (wtype){
+			return getWeaponIDArrayList().get(random.nextInt(getWeaponIDArrayList().size()));
+		} else {
+			return getArmorIDArrayList().get(random.nextInt(getArmorIDArrayList().size()));
+		}
 	}
 	/**
 	 * returns whether the terrain feature is a weapon
@@ -340,29 +362,31 @@ public class MConst {
 	public static boolean isArmor (int terrain){
 		return getArmorIDArrayList().contains(new Integer(terrain));
 	}
-	/**
-	 * IDs of all armor
-	 */
-	public static int[] getArmorIDList(){
-		return new int[]{40,41,42,43,44,45,46,47,49};
-	}
+
 	/**
 	 * IDs of all armor
 	 */
 	private static ArrayList<Integer> getArmorIDArrayList(){
-		ArrayList<Integer>wid=new ArrayList<Integer>(Arrays.asList(40,41,42,43,44,45,46,47,49));
+		ArrayList<Integer>wid=new ArrayList<Integer>(Arrays.asList(
+				DTHUN,
+				DTELE,
+				DHELM,
+				DINVI,
+				DSHIE,
+				DLEAT,
+				DCHAI,
+				DPLAT,
+				DCOUN
+				));
 		return wid;
 	}
+
 	/**
-	 * A list of ids of all items
+	 * Generates string summarizing stats of equipment
+	 * Implementation requires an equip file to fetch the stats from
+	 * @param id
+	 * @return string for a battle map or ally table tooltip
 	 */
-	public static int[] getItemIDList(){
-		int [] iid=new int[20];
-		for (int i=30;i<50;i++){
-			iid[i]=i;
-		}
-		return iid;
-	}
 	public static String getEquipToolTipStats(int id){
 		if (equipMap.containsKey(id)){
 			return equipMap.get(id).getToolTipStats();	
@@ -388,8 +412,11 @@ public class MConst {
 	public static boolean equipBreaksTeleSeal(int id){
 		return equipMap.containsKey(id) && (equipMap.get(id).effectID==breaktele);
 	}
+
 	/**
 	 * returns the amount the item increases the teleport stat by
+	 * @param id the id of a weapon or armor
+	 * @return
 	 */
 	public static int gainTeleFromEquip(int id){
 		if (equipMap.containsKey(id)){

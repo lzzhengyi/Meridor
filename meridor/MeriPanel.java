@@ -31,7 +31,15 @@ public class MeriPanel extends JPanel {
 	final static int MAX_LOGTEXT=10;
 	final static int MAX_VILLAGES=6;
 
-	final static String[] clearlogtext={"Hover the mouse over tiles on the map for information!"};
+	final static String[] clearlogtext={
+			"Your small squad is the kingdom's last defense. Make sure at least 3 villages survive!",
+			"Hover the mouse over tiles on the map for information.",
+			"Click on the tiles of your soldiers to select them, then click a blank tile to move there.",
+			"Your soldiers can also collect items by moving over them.",
+			"Items may affect each soldier differently and even grant them unique abilities!",
+			"When you are next to the enemy, click them to attack!",
+			"Each of your soldiers has different amount of actions per turn.",
+			"You can take 5 actions total across your units each turn. Make them count!"};
 
 	public static Random random =MConst.random;
 	public ArrayList<MeriPet> ally,foe;
@@ -108,10 +116,10 @@ public class MeriPanel extends JPanel {
 		int[]itemList=campaign.getItemList();
 		if (itemList.length<4){
 			bm.placeEquips(new int[]{
-					MConst.getWeaponIDList()[random.nextInt(MConst.getWeaponIDList().length)],
-					MConst.getWeaponIDList()[random.nextInt(MConst.getWeaponIDList().length)],
-					MConst.getArmorIDList()[random.nextInt(MConst.getArmorIDList().length)],
-					MConst.getArmorIDList()[random.nextInt(MConst.getArmorIDList().length)]
+					MConst.getRandomEquip(MConst.WEAPON),
+					MConst.getRandomEquip(MConst.WEAPON),
+					MConst.getRandomEquip(!MConst.WEAPON),
+					MConst.getRandomEquip(!MConst.WEAPON)
 			});
 		} else {
 			bm.placeEquips(itemList);
@@ -565,7 +573,7 @@ public class MeriPanel extends JPanel {
 			if (sp!=null)
 				remove(sp);
 
-			bm=new BattleMap(0,this);
+			bm=new BattleMap(this);
 			c.gridx=0;
 			c.gridy=0;
 			c.gridheight=GridBagConstraints.RELATIVE;

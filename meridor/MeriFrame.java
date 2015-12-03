@@ -10,19 +10,26 @@ import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
 
 
-public class MeriFrame extends JFrame implements ActionListener {
+public class MeriFrame implements ActionListener {
 
 	private String title="Defense of Meridor Alpha";
 	private MeriPanel mpanel;
 	private JMenu menu;
 	private JMenuBar mbar;
 	private JMenuItem mitem,save,load,newcampaign,quit;
+	private JFrame frame;
 	private final JFileChooser fc=new JFileChooser();
 	
+	/**
+	 * Initializes the items, call the build method to start the program UI
+	 */
 	public MeriFrame (){
 		MConst.loadImages();
 		MConst.initItems();
+	}
 
+	public JFrame buildFrame(){
+		frame=new JFrame();
 		//		try { 
 		//	    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		//	} catch (Exception e) {
@@ -76,15 +83,18 @@ public class MeriFrame extends JFrame implements ActionListener {
 		
 		mbar.add(menu);
 
-		setLayout(new FlowLayout());
-		add(mpanel);
-		setJMenuBar(mbar);
+		frame.setLayout(new FlowLayout());
+		frame.add(mpanel);
+		frame.setJMenuBar(mbar);
 		
-		setTitle(title);
-		setVisible(true);
-		pack();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setTitle(title);
+		frame.setVisible(true);
+		frame.setResizable(false);
+		frame.pack();
+		return frame;
 	}
-
+	
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource()==newcampaign){
 			int choice=JOptionPane.showConfirmDialog(null, "Really start a new campaign?", "", JOptionPane.YES_NO_OPTION);
@@ -93,28 +103,37 @@ public class MeriFrame extends JFrame implements ActionListener {
 			}
 		} 
 		else if (e.getSource()==save){
-			int returnval=fc.showSaveDialog(this);
+			int returnval=fc.showSaveDialog(frame);
 			
 			if (returnval==JFileChooser.APPROVE_OPTION){
 				File file=fc.getSelectedFile();
-				try{
-					OutputStream osfile=new FileOutputStream(file);
-					OutputStream buffer=new BufferedOutputStream(osfile);
-					ObjectOutput output=new ObjectOutputStream(buffer);
-					try {
-						output.writeObject(mpanel.campaign);
-					} finally {
-						output.close();
+				boolean canwrite=!file.exists();
+				if (!canwrite){
+					int result=JOptionPane.showConfirmDialog(frame, "This file already exists. Overwrite?");
+					if (result==JOptionPane.YES_OPTION){
+						canwrite=true;
 					}
-				} 
-				catch(IOException ex){
-					ex.printStackTrace();
-					System.err.println("File Save error!");
-				} 
+				}
+				if (canwrite){
+					try{
+						OutputStream osfile=new FileOutputStream(file);
+						OutputStream buffer=new BufferedOutputStream(osfile);
+						ObjectOutput output=new ObjectOutputStream(buffer);
+						try {
+							output.writeObject(mpanel.campaign);
+						} finally {
+							output.close();
+						}
+					} 
+					catch(IOException ex){
+						ex.printStackTrace();
+						JOptionPane.showMessageDialog(frame, "File save error!");
+					} 					
+				}
 			}
 		}
 		else if (e.getSource()==load){
-			int returnval=fc.showOpenDialog(this);
+			int returnval=fc.showOpenDialog(frame);
 			
 			if (returnval==JFileChooser.APPROVE_OPTION){
 				File file=fc.getSelectedFile();
@@ -123,23 +142,24 @@ public class MeriFrame extends JFrame implements ActionListener {
 					//deserialize in
 					try {
 						Campaign loaded=(Campaign)input.readObject();
-						System.out.println("Successfully loadd campaign");
+						System.out.println("Successfully loaded campaign");
 						mpanel.loadCampaign(loaded);;
 					}finally {
 						input.close();
 					}
 				} 
 				catch(IOException ex){
-					System.err.println("File Load error!");
+					JOptionPane.showMessageDialog(frame, "File Load error!");
 				} 
 				catch (ClassNotFoundException e1) {
+					JOptionPane.showMessageDialog(frame, "File could not be loaded: filetype may be incorrect.");
 					e1.printStackTrace();
 				}
 			}
 		}
 		else if (e.getSource()==quit){
-			setVisible(false);
-			dispose();
+			frame.setVisible(false);
+			frame.dispose();
 			System.exit(0);
 		}
 		else if(e.getSource()==mitem){
