@@ -104,7 +104,14 @@ public class MeriFrame implements ActionListener {
 		frame.pack();
 		return frame;
 	}
-	
+	/**
+	 * Create the /saves directory and point the filechooser there
+	 */
+	public void initSaveDirectory(){
+		File currdir=new File("./saves");
+		currdir.mkdirs();
+		fc.setCurrentDirectory(currdir);
+	}
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource()==newcampaign){
 			int choice=JOptionPane.showConfirmDialog(null, "Really start a new campaign?", "", JOptionPane.YES_NO_OPTION);
@@ -117,6 +124,8 @@ public class MeriFrame implements ActionListener {
 				showSaveWarning=false;
 				JOptionPane.showMessageDialog(frame, "CAUTION: During a battle, you can save your campaign progress, but not your current progress in that battle. Reloading from a save will bring you back to the party select screen if you are in a battle.");
 			}
+
+			initSaveDirectory();
 			int returnval=fc.showSaveDialog(frame);
 			
 			if (returnval==JFileChooser.APPROVE_OPTION){
@@ -147,6 +156,8 @@ public class MeriFrame implements ActionListener {
 			}
 		}
 		else if (e.getSource()==load){
+			
+			initSaveDirectory();
 			int returnval=fc.showOpenDialog(frame);
 			
 			if (returnval==JFileChooser.APPROVE_OPTION){
