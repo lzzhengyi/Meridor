@@ -258,6 +258,12 @@ public class MeriPanel extends JPanel {
 	public void razeVillage(){
 		villagesLeft--;
 		im.updateVillagesLeft();
+		updateBattleLog("The invaders have cruelly put a village to the torch...");
+		int vmargin=(villagesLeft-MAX_VILLAGES/2);
+		if (vmargin>0)
+			updateBattleLog("Don't let more than "+vmargin+" villages be lost!");
+		else
+			updateBattleLog("It's down to the wire! Protect every remaining village!");
 		System.out.println("village razed!");
 	}
 	/**
@@ -476,7 +482,7 @@ public class MeriPanel extends JPanel {
 		}
 		bm.updatePetLocations(getPetLocations());
 		update();
-		System.out.println("terminated");
+		System.out.println("AI process terminated");
 	}
 	/**
 	 * call this after a move is registered in the battlemap
@@ -496,7 +502,11 @@ public class MeriPanel extends JPanel {
 					updateBattleLog("Defeated, "+foe.get(i).name+" roars as it is banished from your dimension!");
 					bm.setTerrain(foe.get(i).getLocation(), MConst.CRATER);
 				}
+				boolean notPromoted=!selected.promoted;
 				selected.gainSave(campaign.getWave());
+				if (notPromoted && selected.promoted){
+					updateBattleLog(selected.name+" shouts triumphantly: 'I've gained a promotion!'");
+				}
 				foe.remove(i);
 			}
 		}
