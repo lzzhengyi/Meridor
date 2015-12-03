@@ -1,10 +1,19 @@
 package meridor;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -12,7 +21,8 @@ import javax.swing.UIManager.LookAndFeelInfo;
 
 public class MeriFrame implements ActionListener {
 
-	private String title="Defense of Meridor Alpha";
+	private boolean showSaveWarning=true;
+	private String title="Defense of Meridor Beta";
 	private MeriPanel mpanel;
 	private JMenu menu;
 	private JMenuBar mbar;
@@ -103,6 +113,10 @@ public class MeriFrame implements ActionListener {
 			}
 		} 
 		else if (e.getSource()==save){
+			if (showSaveWarning){
+				showSaveWarning=false;
+				JOptionPane.showMessageDialog(frame, "CAUTION: During a battle, you can save your campaign progress, but not your current progress in that battle. Reloading from a save will bring you back to the party select screen if you are in a battle.");
+			}
 			int returnval=fc.showSaveDialog(frame);
 			
 			if (returnval==JFileChooser.APPROVE_OPTION){
@@ -113,7 +127,7 @@ public class MeriFrame implements ActionListener {
 					if (result==JOptionPane.YES_OPTION){
 						canwrite=true;
 					}
-				}
+				} 
 				if (canwrite){
 					try{
 						OutputStream osfile=new FileOutputStream(file);

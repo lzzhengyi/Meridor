@@ -14,7 +14,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.image.ImageObserver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -798,9 +797,6 @@ public class MeriPanel extends JPanel {
 	 */
 	private class SelectParty extends JPanel implements ActionListener, TableModelListener {
 
-		final private String[] SELECTCOLS={
-				"Name","Selected"	
-		};
 		final private String[] STATCOLS={
 				"Name","Selected","","Rank","Health","Attack","","Defence","","Saves"	
 		};
@@ -947,6 +943,9 @@ public class MeriPanel extends JPanel {
 			System.out.println(count);
 			return count==5;
 		}
+		/*
+		 *TODO delate this method 
+		 */
 		public void paintComponent(Graphics g){
 			super.paintComponent(g);
 //			updateStatData();
@@ -1264,9 +1263,14 @@ public class MeriPanel extends JPanel {
 			}
 		}
 	}
+	/**
+	 * TODO make this its own class; this is why I preserve the unused instance variable parent
+	 * @author Lim
+	 *
+	 */
 	private class VictoryPanel extends JPanel{
 		
-		JPanel parent;
+		private JPanel parent;
 		
 		private VictoryPanel(JPanel parent){
 			this.parent=parent;

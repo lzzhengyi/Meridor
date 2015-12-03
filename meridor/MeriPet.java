@@ -1,9 +1,11 @@
 package meridor;
 import java.io.Serializable;
-import java.util.Random;
 import static meridor.MConst.*;
 
-
+/**
+ * The class that contains the features of player and enemy neopets
+ * This class also handles combat calculations
+ */
 public class MeriPet implements Serializable {
 	/**
 	 * 
@@ -38,13 +40,7 @@ public class MeriPet implements Serializable {
 			new Species (D_BUZ,"Draco Buzz",2,15,10,9),
 			new Species (D_GRA,"Draco Grarrl",2,15,10,9)
 	};
-	/*
-	 * The class that contains the features of player and enemy neopets
-	 * This class is involved in combat calculations
-	 * A method is needed to instantiate new pets spawned when pets die
-	 * 
-	 * How to calculate damage; attack+bonuses+roll-defense
-	 */
+
 	final static int HP = 0;
 	final static int ATK = 1;
 	final static int DEF = 2;
@@ -71,6 +67,9 @@ public class MeriPet implements Serializable {
 	 * species (id)
 	 * spawn condition (ally, or foe of various battles)
 	 * 
+	 * @param n
+	 * @param sid
+	 * @param sc
 	 */
 	public MeriPet (String n, int sid, int sc){
 		name=n;
@@ -241,12 +240,14 @@ public class MeriPet implements Serializable {
 		}
 	}
 	//***lazy initialization pattern
-	//I'm not sure about the implementation of location
-	//this implementation is intended to require the gamestate to
-	//loop through list of player/foe pets to see which coord lines up with a click
+
 	/**
 	 * Lazy initialization
 	 * returns an "array-tuple" 2 units long, corresponding to x and y value
+	 * 
+	 * 	I'm not sure about the implementation of location as an array
+	 * 	this implementation is intended to require the gamestate to
+	 * 	loop through list of player/foe pets to see which coord lines up with a click
 	 */
 	public int[] getLocation(){
 		if (location==null){

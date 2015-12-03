@@ -9,9 +9,11 @@ import static meridor.MConst.*;
  * current scenario
  * current team
  * whether the item has been looted for the scenario
+ * scenarios are currently hardcoded
  * 
- * -probably implement scenario as a private class
- * -this reads the scenario information from an external file or a set of hardcoded instructions
+ * Planned future features:
+ * -refactor scenario specific information into this class as well, from MeriPanel
+ * -this could read the scenario information from an external file
  *  
  */
 public class Campaign implements Serializable {
@@ -173,6 +175,10 @@ public class Campaign implements Serializable {
 	public int getPotion(){
 		return getCurrentScenario().potionID;
 	}
+	/**
+	 * "Wave" is the current stage in game progression, which is used to determine statcaps
+	 * @return
+	 */
 	public int getWave(){
 		return getCurrentScenario().wave;
 	}
@@ -235,7 +241,7 @@ public class Campaign implements Serializable {
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
-		private String name;
+		private String name; //unsure whether to delete this
 		private int treasureID, potionID;
 		public int[] itemIDList;
 		int[][] foes;
@@ -258,15 +264,6 @@ public class Campaign implements Serializable {
 			this.foes=foes;
 			this.armysize=armysize;
 			this.wave=wave;
-		}
-		public String getName(){
-			return name;
-		}
-		public int getTreasureID(){
-			return treasureID;
-		}
-		public int getPotionID(){
-			return potionID;
 		}
 	}
 }
