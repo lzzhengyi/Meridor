@@ -51,7 +51,6 @@ public class MeriPet implements Serializable {
 	final Species species; //contains racial information for the pet
 	int[] stats={10,5,5}; //contains current base stats
 	int dmg; //current damage taken by the pet
-//	int rank; //the current level of the npet, max is 5
 	int saves; //the stat for experience
 	int weapon; //the id of the item equipped
 	int armor; //id of the item equipped
@@ -474,7 +473,7 @@ public class MeriPet implements Serializable {
 	 */
 	public static String heal (MeriPet a, MeriPet d){
 		int net = (a.stats[ATK]+a.getWeaponBonus()+getASbonus(a.stats[ATK]))/2;
-		String battlelog=a.name+" heals "+d.name+" of "+net+
+		String battlelog=a.name+" heals "+d.name+" of "+Math.min(d.dmg, net)+
 				" damage!";
 		System.out.println(battlelog); //placeholder?
 		d.heal(net);

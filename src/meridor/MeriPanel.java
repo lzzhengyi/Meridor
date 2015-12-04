@@ -525,14 +525,14 @@ public class MeriPanel extends JPanel {
 		if (campaign.checkCampaignComplete()){
 			displayVictoryPanel();
 		} else {
-			toggleActive();
-			campaign.allies=ally;
 			campaign.advance();
 			if (campaign.currentBattle==0){
 				for (int i=0;i<ally.size();i++){
 					ally.get(i).promoted=false;
 				}
 			}
+			toggleActive();
+			campaign.allies=ally;
 		}
 	}
 	/**
@@ -720,6 +720,13 @@ public class MeriPanel extends JPanel {
 					try {
 						if (colIndex==0 && ally !=null && ally.size()>rowIndex){
 							text=(ally.get(rowIndex).getSpeciesName());
+						}
+						else if (colIndex==1 && ally !=null && ally.size()>rowIndex){
+							String isPromoted=" has not yet been promoted this mission";
+							if (ally.get(rowIndex).promoted){
+								isPromoted=" has already been promoted this mission";
+							}
+							text=(ally.get(rowIndex).name+isPromoted);
 						}
 						else if (colIndex==4 && ally !=null && ally.size()>rowIndex){
 							text=MConst.getEquipToolTipStats(ally.get(rowIndex).weapon);
@@ -915,7 +922,14 @@ public class MeriPanel extends JPanel {
 					int rowIndex=rowAtPoint(p);
 					int colIndex=columnAtPoint(p);
 					try {
-						if (colIndex==2 && ally !=null && ally.size()>rowIndex){
+						if ((colIndex==0 || colIndex==3) && ally !=null && ally.size()>rowIndex){
+							String isPromoted=" has not yet been promoted this mission";
+							if (ally.get(rowIndex).promoted){
+								isPromoted=" has already been promoted this mission";
+							}
+							text=(ally.get(rowIndex).name+isPromoted);
+						}
+						else if (colIndex==2 && ally !=null && ally.size()>rowIndex){
 							text=(ally.get(rowIndex).getSpeciesName());
 						}
 						else if (colIndex==6 && ally !=null && ally.size()>rowIndex){
@@ -953,13 +967,7 @@ public class MeriPanel extends JPanel {
 			System.out.println(count);
 			return count==5;
 		}
-		/*
-		 *TODO delate this method 
-		 */
-		public void paintComponent(Graphics g){
-			super.paintComponent(g);
-//			updateStatData();
-		}
+
 		/*
 		 * (non-Javadoc)
 		 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
@@ -997,7 +1005,6 @@ public class MeriPanel extends JPanel {
 				ally.get(row).name=(String)((DefaultTableModel)e.getSource()).getValueAt(row, col);
 				campaign.allies.get(row).name=(String)((DefaultTableModel)e.getSource()).getValueAt(row, col);
 			}
-//			System.out.println(petchosen[row]);
 		}
 	}
 	/**
