@@ -47,9 +47,7 @@ Your pets also rank up based on saves. The saves required to rank up in this ver
 
 Good luck!
 
-============================================================================
-
-To veterans of the original game:
+## To veterans of the original game:
 
 The mechanics have been reverse-engineered and implemented from scratch.
 Consequently, they may differ from the mechanics as remembered or as recorded in old guides.
